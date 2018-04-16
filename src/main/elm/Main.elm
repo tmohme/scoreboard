@@ -146,7 +146,7 @@ viewEntrance model =
 
 viewPlayer : Player -> Html Msg
 viewPlayer p =
-    Html.p [] [ text (p.points |> toString) ]
+    Html.p [class "big-auto-size"] [ text (p.points |> toString) ]
 
 
 viewGame : Model -> Html Msg
