@@ -26,11 +26,20 @@ type alias Model =
     , page : Page
     , left : Player
     , right : Player
+    , shooting : Maybe Player
     }
 
 
+type PlayerId
+    = Left
+    | Right
+
+
 type alias Player =
-    { points : Int }
+    { id : PlayerId
+    , points : Int
+    , inning : Int
+    }
 
 
 init : ( Model, Cmd Msg )
@@ -39,8 +48,9 @@ init =
       , runToBuffer = Just 80
       , isPopUpActive = False
       , page = Entrance
-      , left = Player 0
-      , right = Player 0
+      , left = Player Left 0 0
+      , right = Player Right 0 0
+      , shooting = Nothing
       }
     , Cmd.none
     )
@@ -51,14 +61,27 @@ canBreak model =
     isJust model.runTo
 
 
+break : Player -> Player
+break player =
+    { player | inning = player.inning + 1 }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LeftBreak ->
-            ( { model | page = Game }, Cmd.none )
+            let
+                player =
+                    break model.left
+            in
+                ( { model | page = Game, shooting = Just player, left = player }, Cmd.none )
 
         RightBreak ->
-            ( { model | page = Game }, Cmd.none )
+            let
+                player =
+                    break model.right
+            in
+                ( { model | page = Game, shooting = Just player, right = player }, Cmd.none )
 
         RunToInput s ->
             ( { model | runToBuffer = String.toInt s |> Result.toMaybe }
@@ -91,8 +114,8 @@ header =
     text "14-1 Scoreboard"
 
 
-break : Model -> Msg -> Html Msg
-break model msg =
+breakButton : Model -> Msg -> Html Msg
+breakButton model msg =
     button [ type_ "button", class "button", disabled (not (canBreak model)), onClick msg ]
         [ text "Break?" ]
 
@@ -134,9 +157,9 @@ renderModal model =
 viewEntrance : Model -> Html Msg
 viewEntrance model =
     div []
-        [ break model LeftBreak
+        [ breakButton model LeftBreak
         , runTo
-        , break model RightBreak
+        , breakButton model RightBreak
         , if model.isPopUpActive then
             renderModal model
           else
@@ -144,24 +167,50 @@ viewEntrance model =
         ]
 
 
-viewPlayer : Player -> Html Msg
-viewPlayer p =
-    Html.p [class "big-auto-size"] [ text (p.points |> toString) ]
+viewPlayer : Player -> Bool -> Html Msg
+viewPlayer player isShooting =
+    let
+        style =
+            case isShooting of
+                True ->
+                    "has-background-primary"
+
+                False ->
+                    ""
+    in
+        div []
+            [ p [ class ("big-auto-size " ++ style) ] [ text (player.points |> toString) ]
+            , table [ class "table is-bordered" ]
+                [ thead []
+                    [ td [] [ text "AN" ] ]
+                , tbody []
+                    [ tr []
+                        [ td [] [ text (player.inning |> toString) ] ]
+                    ]
+                ]
+            ]
 
 
 viewGame : Model -> Html Msg
 viewGame model =
-    div [ class "columns" ]
-        [ div [ class "column is-centered has-text-centered" ] [ viewPlayer model.left ]
-        , div [ class "column is-centered  has-text-centered is-narrow" ]
-            [ button [ class "button" ] [ text "Vollbild" ]
-            , button [ class "button" ] [ text "RunTo" ]
-            , button [ class "button" ] [ text "Pause / Weiter" ]
-            , button [ class "button" ] [ text "Log / Undo" ]
-            , button [ class "button" ] [ text "Ende" ]
+    let
+        isLeftShooting =
+            (model.shooting == Just model.left)
+
+        isRightShooting =
+            (model.shooting == Just model.right)
+    in
+        div [ class "columns" ]
+            [ div [ class "column is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
+            , div [ class "column is-centered  has-text-centered is-narrow" ]
+                [ button [ class "button" ] [ text "Vollbild" ]
+                , button [ class "button" ] [ text "RunTo" ]
+                , button [ class "button" ] [ text "Pause / Weiter" ]
+                , button [ class "button" ] [ text "Log / Undo" ]
+                , button [ class "button" ] [ text "Ende" ]
+                ]
+            , div [ class "column is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
             ]
-        , div [ class "column is-centered has-text-centered" ] [ viewPlayer model.right ]
-        ]
 
 
 body : Model -> Html Msg
