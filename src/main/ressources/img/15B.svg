@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="65"
+   height="65"
+   viewBox="0 0 65.000001 65.000001"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="15B.svg"
+   inkscape:export-filename="C:\Users\mwitte\ownCloud\Projekte\Scoreboard\3b.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4.2453172"
+     inkscape:cx="54.422076"
+     inkscape:cy="20.383283"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="729"
+     inkscape:window-height="632"
+     inkscape:window-x="3"
+     inkscape:window-y="91"
+     inkscape:window-maximized="0"
+     units="px" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-987.36214)">
+    <ellipse
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.65661305;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path3336"
+       cx="32.62418"
+       cy="1019.8558"
+       rx="31.685087"
+       ry="31.394073"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <ellipse
+       style="fill:#ffffff;fill-rule:evenodd;stroke:#000000;stroke-width:0.16720559px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path3338"
+       ry="15.826327"
+       rx="16.650944"
+       cy="1018.9543"
+       cx="32.273434" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.10350037px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="15.549801"
+       y="1040.6266"
+       id="text3342"
+       sodipodi:linespacing="125%"
+       transform="scale(1.0131541,0.98701671)"><tspan
+         sodipodi:role="line"
+         id="tspan3344"
+         x="15.549801"
+         y="1040.6266">15</tspan></text>
+    <a
+       transform="matrix(0.65846084,0,0,0.6547704,-0.60923223,987.25185)"
+       id="a4153">
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path3349"
+         d="m 15.882712,16.456454 69.413333,0"
+         style="fill:#0000ff;fill-rule:evenodd;stroke:#000000;stroke-width:1.00858378px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </a>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.66000372px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 8.1703319,1039.7536 49.0631201,-0.2567"
+       id="path3351"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:#800000"
+       d="m 7.1822891,1038.3232 c -3.0058872,-4.0612 -5.0205937,-8.9315 -5.7998465,-14.0202 -0.3271734,-2.1365 -0.3301312,-6.8454 -0.0056,-8.8859 0.9914708,-6.2335 3.4983734,-11.5953 7.5809066,-16.21422 l 0.7376145,-0.8345 23.0039302,0.0642 23.003932,0.0642 1.039394,1.21971 c 2.76086,3.23978 5.023384,7.44838 6.229941,11.58868 1.866012,6.4031 1.511951,13.7355 -0.963493,19.9535 -0.896501,2.2519 -2.617777,5.3236 -3.960543,7.0676 l -0.615292,0.7992 -17.559355,0.067 c -9.657644,0.037 -20.783947,0.1 -24.725117,0.1398 l -7.1657655,0.072 -0.8007246,-1.0819 z m 27.7207609,-3.6149 c 1.849629,-0.2793 3.383256,-0.7639 5.099959,-1.6114 1.816338,-0.8967 2.963359,-1.7153 4.398529,-3.1387 3.02814,-3.0036 4.612177,-6.7711 4.617872,-10.9833 0.0056,-4.1368 -1.45384,-7.7527 -4.333187,-10.7359 -3.612749,-3.743 -8.541756,-5.5825 -13.850228,-5.1688 -1.541593,0.1201 -3.64043,0.59 -4.970846,1.1128 -4.493875,1.766 -8.123976,5.5335 -9.608062,9.9714 -1.020804,3.0526 -0.967866,6.9281 0.136407,9.986 1.55237,4.2988 5.055526,7.8337 9.496263,9.5822 1.053972,0.415 2.747318,0.8601 3.916053,1.0294 1.235052,0.1789 3.767538,0.1572 5.09724,-0.044 z"
+       id="path4158"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:#ffffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 30.112938,63.309285 C 24.739561,62.867963 19.847143,61.196959 15.451708,58.301747 13.322903,56.899532 10.095654,54.181629 9.5246056,53.310099 L 9.1634693,52.758936 32.652544,52.678 c 12.91899,-0.04451 23.525184,-0.06138 23.569317,-0.03749 0.191437,0.103647 -2.087947,2.354915 -3.685731,3.640266 -6.498386,5.227683 -14.357109,7.690985 -22.423192,7.028509 z"
+       id="path3454"
+       inkscape:connector-curvature="0"
+       transform="translate(0,987.36214)" />
+    <path
+       style="fill:#ffffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 12.092548,9.2185623 C 15.503523,6.0810952 21.023765,3.3302064 26.226303,2.1753222 28.508972,1.6686044 34.288101,1.4742214 36.739807,1.821697 43.126991,2.7269398 48.519631,5.1862544 53.437709,9.436778 l 1.022056,0.883326 -21.772225,-0.0094 -21.772225,-0.0094 1.177233,-1.0828367 z"
+       id="path3456"
+       inkscape:connector-curvature="0"
+       transform="translate(0,987.36214)" />
+  </g>
+</svg>

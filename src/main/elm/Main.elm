@@ -18,6 +18,7 @@ type Msg
     | RunToInput String
     | SetRunTo
     | ToggleRunTo
+    | BallsLeft Int
 
 
 type alias Model =
@@ -98,6 +99,9 @@ update msg model =
             ( { model | isPopUpActive = not model.isPopUpActive }
             , Cmd.none
             )
+
+        BallsLeft i ->
+            ( model, Cmd.none )
 
 
 css : String -> Html msg
@@ -206,16 +210,39 @@ viewGame model =
         isRightShooting =
             (model.shooting == Just model.right)
     in
-        div [ class "columns" ]
-            [ div [ class "column is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
-            , div [ class "column is-centered  has-text-centered is-narrow" ]
-                [ button [ class "button" ] [ text "Vollbild" ]
-                , button [ class "button" ] [ text "RunTo" ]
-                , button [ class "button" ] [ text "Pause / Weiter" ]
-                , button [ class "button" ] [ text "Log / Undo" ]
-                , button [ class "button" ] [ text "Ende" ]
+        div
+            []
+            [ div
+                [ class "columns" ]
+                [ div [ class "column is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
+                , div [ class "column is-centered  has-text-centered is-narrow" ]
+                    [ button [ class "button" ] [ text "Vollbild" ]
+                    , button [ class "button" ] [ text "RunTo" ]
+                    , button [ class "button" ] [ text "Pause / Weiter" ]
+                    , button [ class "button" ] [ text "Log / Undo" ]
+                    , button [ class "button" ] [ text "Ende" ]
+                    ]
+                , div [ class "column is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
                 ]
-            , div [ class "column is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
+            , footer [ class "footer" ]
+                [ div [ class "container" ]
+                    [ img [ src "img/1B.svg", onClick (BallsLeft 1) ] []
+                    , img [ src "img/2B.svg", onClick (BallsLeft 2) ] []
+                    , img [ src "img/3B.svg", onClick (BallsLeft 3) ] []
+                    , img [ src "img/4B.svg", onClick (BallsLeft 4) ] []
+                    , img [ src "img/5B.svg", onClick (BallsLeft 5) ] []
+                    , img [ src "img/6B.svg", onClick (BallsLeft 6) ] []
+                    , img [ src "img/7B.svg", onClick (BallsLeft 7) ] []
+                    , img [ src "img/8B.svg", onClick (BallsLeft 8) ] []
+                    , img [ src "img/9B.svg", onClick (BallsLeft 9) ] []
+                    , img [ src "img/10B.svg", onClick (BallsLeft 10) ] []
+                    , img [ src "img/11B.svg", onClick (BallsLeft 11) ] []
+                    , img [ src "img/12B.svg", onClick (BallsLeft 12) ] []
+                    , img [ src "img/13B.svg", onClick (BallsLeft 13) ] []
+                    , img [ src "img/14B.svg", onClick (BallsLeft 14) ] []
+                    , img [ src "img/15B.svg", onClick (BallsLeft 15) ] []
+                    ]
+                ]
             ]
 
 
