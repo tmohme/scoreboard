@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Maybe.Extra exposing (..)
+import Json.Decode
 
 
 type Page
@@ -109,8 +110,8 @@ bulma =
     css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.0/css/bulma.min.css"
 
 
-header : Html Msg
-header =
+viewHeader : Html Msg
+viewHeader =
     text "14-1 Scoreboard"
 
 
@@ -126,8 +127,8 @@ runTo =
         [ text "run to ..." ]
 
 
-renderModal : Model -> Html Msg
-renderModal model =
+viewRunToModalDialog : Model -> Html Msg
+viewRunToModalDialog model =
     let
         runToValue =
             Maybe.map (\v -> toString v) model.runToBuffer |> Maybe.withDefault ""
@@ -136,19 +137,24 @@ renderModal model =
             [ div [ class "modal-background", onClick ToggleRunTo ]
                 []
             , div [ class "modal-card" ]
-                [ Html.header [ class "modal-card-head" ]
-                    [ p [ class "modal-card-title" ]
-                        [ text "Spielziel" ]
-                    , button [ class "delete", onClick ToggleRunTo, attribute "aria-label" "close" ]
-                        []
-                    ]
-                , section [ class "modal-card-body" ]
-                    [ text "Gib dein Spielziel ein (z.B. 125):"
-                    , input [ type_ "number", class "input", value runToValue, step "5", onInput RunToInput ] []
-                    ]
-                , footer [ class "modal-card-foot" ]
-                    [ button [ class "button is-primary", onClick SetRunTo, attribute "aria-label" "OK" ]
-                        [ text "OK" ]
+                [ Html.form [ action "", onWithOptions "submit" { preventDefault = True, stopPropagation = True } (Json.Decode.succeed SetRunTo) ]
+                    [ Html.header
+                        [ class "modal-card-head" ]
+                        [ p [ class "modal-card-title" ]
+                            [ text "Spielziel" ]
+                        , button [ class "delete", onClick ToggleRunTo, attribute "aria-label" "close" ]
+                            []
+                        ]
+                    , section [ class "modal-card-body" ]
+                        [ div [ class "field" ]
+                            [ label [ class "label" ] [ text "Gib dein Spielziel ein (z.B. 125):" ]
+                            , input [ type_ "number", class "input", value runToValue, step "5", onInput RunToInput ] []
+                            ]
+                        ]
+                    , footer [ class "modal-card-foot" ]
+                        [ button [ type_ "button", class "button is-primary", onClick SetRunTo, attribute "aria-label" "OK" ]
+                            [ text "OK" ]
+                        ]
                     ]
                 ]
             ]
@@ -161,7 +167,7 @@ viewEntrance model =
         , runTo
         , breakButton model RightBreak
         , if model.isPopUpActive then
-            renderModal model
+            viewRunToModalDialog model
           else
             text ""
         ]
@@ -213,8 +219,8 @@ viewGame model =
             ]
 
 
-body : Model -> Html Msg
-body model =
+viewBody : Model -> Html Msg
+viewBody model =
     case model.page of
         Entrance ->
             viewEntrance model
@@ -227,8 +233,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ bulma
-        , header
-        , body model
+        , viewHeader
+        , viewBody model
         ]
 
 
