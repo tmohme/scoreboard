@@ -116,7 +116,11 @@ bulma =
 
 viewHeader : Html Msg
 viewHeader =
-    text "14-1 Scoreboard"
+    nav [ class "level" ]
+        [ div [ class "level-item" ] [ text "left" ]
+        , div [ class "level-item" ] [ text "14-1 Scoreboard" ]
+        , div [ class "level-item" ] [ text "right" ]
+        ]
 
 
 breakButton : Model -> Msg -> Html Msg
@@ -166,10 +170,13 @@ viewRunToModalDialog model =
 
 viewEntrance : Model -> Html Msg
 viewEntrance model =
-    div []
-        [ breakButton model LeftBreak
-        , runTo
-        , breakButton model RightBreak
+    nav [ class "level" ]
+        [ div [ class "level-item has-test-cenered" ]
+            [ breakButton model LeftBreak ]
+        , div [ class "level-item has-test-cenered" ]
+            [ runTo ]
+        , div [ class "level-item has-test-cenered" ]
+            [ breakButton model RightBreak ]
         , if model.isPopUpActive then
             viewRunToModalDialog model
           else
@@ -189,13 +196,23 @@ viewPlayer player isShooting =
                     ""
     in
         div []
-            [ p [ class ("big-auto-size " ++ style) ] [ text (player.points |> toString) ]
-            , table [ class "table is-bordered" ]
-                [ thead []
-                    [ td [] [ text "AN" ] ]
-                , tbody []
-                    [ tr []
-                        [ td [] [ text (player.inning |> toString) ] ]
+            [ p [ class ("big-auto-size" ++ " " ++ style) ] [ text (player.points |> toString) ]
+            , div [ class ("level" ++ " " ++ style) ]
+                [ div [ class "level-item has-text-centered" ]
+                    [ p [ class "heading" ] [ text "AN" ]
+                    , p [ class "title" ] [ text (player.inning |> toString) ]
+                    ]
+                , div [ class "level-item has-text-centered" ]
+                    [ p [ class "heading" ] [ text "GD" ]
+                    , p [ class "title" ] [ text "?" ]
+                    ]
+                , div [ class "level-item has-text-centered" ]
+                    [ p [ class "heading" ] [ text "HA" ]
+                    , p [ class "title" ] [ text "?" ]
+                    ]
+                , div [ class "level-item has-text-centered" ]
+                    [ p [ class "heading" ] [ text "Fouls" ]
+                    , p [ class "title" ] [ text "?" ]
                     ]
                 ]
             ]
@@ -214,15 +231,15 @@ viewGame model =
             []
             [ div
                 [ class "columns" ]
-                [ div [ class "column is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
-                , div [ class "column is-centered  has-text-centered is-narrow" ]
+                [ div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
+                , div [ class "column is-one-fifth is-centered  has-text-centered" ]
                     [ button [ class "button" ] [ text "Vollbild" ]
                     , button [ class "button" ] [ text "RunTo" ]
                     , button [ class "button" ] [ text "Pause / Weiter" ]
                     , button [ class "button" ] [ text "Log / Undo" ]
                     , button [ class "button" ] [ text "Ende" ]
                     ]
-                , div [ class "column is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
+                , div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
                 ]
             , footer [ class "footer" ]
                 [ div [ class "container" ]
