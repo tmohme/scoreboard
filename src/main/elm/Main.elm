@@ -218,6 +218,11 @@ viewPlayer player isShooting =
             ]
 
 
+viewBall : Int -> Html Msg
+viewBall n =
+    img [ alt (toString n), src ("img/" ++ (toString n) ++ "B.svg"), onClick (BallsLeft n) ] []
+
+
 viewGame : Model -> Html Msg
 viewGame model =
     let
@@ -243,21 +248,21 @@ viewGame model =
                 ]
             , footer [ class "footer" ]
                 [ div [ class "container" ]
-                    [ img [ src "img/1B.svg", onClick (BallsLeft 1) ] []
-                    , img [ src "img/2B.svg", onClick (BallsLeft 2) ] []
-                    , img [ src "img/3B.svg", onClick (BallsLeft 3) ] []
-                    , img [ src "img/4B.svg", onClick (BallsLeft 4) ] []
-                    , img [ src "img/5B.svg", onClick (BallsLeft 5) ] []
-                    , img [ src "img/6B.svg", onClick (BallsLeft 6) ] []
-                    , img [ src "img/7B.svg", onClick (BallsLeft 7) ] []
-                    , img [ src "img/8B.svg", onClick (BallsLeft 8) ] []
-                    , img [ src "img/9B.svg", onClick (BallsLeft 9) ] []
-                    , img [ src "img/10B.svg", onClick (BallsLeft 10) ] []
-                    , img [ src "img/11B.svg", onClick (BallsLeft 11) ] []
-                    , img [ src "img/12B.svg", onClick (BallsLeft 12) ] []
-                    , img [ src "img/13B.svg", onClick (BallsLeft 13) ] []
-                    , img [ src "img/14B.svg", onClick (BallsLeft 14) ] []
-                    , img [ src "img/15B.svg", onClick (BallsLeft 15) ] []
+                    [ viewBall 1
+                    , viewBall 2
+                    , viewBall 3
+                    , viewBall 4
+                    , viewBall 5
+                    , viewBall 6
+                    , viewBall 7
+                    , viewBall 8
+                    , viewBall 9
+                    , viewBall 10
+                    , viewBall 11
+                    , viewBall 12
+                    , viewBall 13
+                    , viewBall 14
+                    , viewBall 15
                     ]
                 ]
             ]
