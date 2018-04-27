@@ -29,6 +29,7 @@ type alias Model =
     , left : Player
     , right : Player
     , shooting : Maybe Player
+    , ballsLeft : Int
     }
 
 
@@ -40,7 +41,7 @@ type PlayerId
 type alias Player =
     { id : PlayerId
     , points : Int
-    , inning : Int
+    , innings : Int
     }
 
 
@@ -53,6 +54,7 @@ init =
       , left = Player Left 0 0
       , right = Player Right 0 0
       , shooting = Nothing
+      , ballsLeft = 15
       }
     , Cmd.none
     )
@@ -63,25 +65,20 @@ canBreak model =
     isJust model.runTo
 
 
-break : Player -> Player
-break player =
-    { player | inning = player.inning + 1 }
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LeftBreak ->
             let
                 player =
-                    break model.left
+                    model.left
             in
                 ( { model | page = Game, shooting = Just player, left = player }, Cmd.none )
 
         RightBreak ->
             let
                 player =
-                    break model.right
+                    model.right
             in
                 ( { model | page = Game, shooting = Just player, right = player }, Cmd.none )
 
@@ -100,8 +97,81 @@ update msg model =
             , Cmd.none
             )
 
-        BallsLeft i ->
-            ( model, Cmd.none )
+        BallsLeft n ->
+            let
+                shotBalls =
+                    model.ballsLeft - n
+
+                playerSwitch =
+                    ((n > 1) || (model.ballsLeft == 1))
+
+                inningIncrement =
+                    case playerSwitch of
+                        True ->
+                            1
+
+                        False ->
+                            0
+
+                left =
+                    case model.shooting of
+                        Just player ->
+                            if (player == model.left) then
+                                { player
+                                    | points = player.points + shotBalls
+                                    , innings = player.innings + inningIncrement
+                                }
+                            else
+                                model.left
+
+                        Nothing ->
+                            model.left
+
+                right =
+                    case model.shooting of
+                        Just player ->
+                            if (player == model.right) then
+                                { player
+                                    | points = player.points + shotBalls
+                                    , innings = player.innings + inningIncrement
+                                }
+                            else
+                                model.right
+
+                        Nothing ->
+                            model.right
+
+                ballsLeft =
+                    if (n == 1) then
+                        15
+                    else
+                        n
+
+                shootingNext =
+                    if (playerSwitch) then
+                        case model.shooting of
+                            Just player ->
+                                if (player == model.left) then
+                                    Just right
+                                else
+                                    Just left
+
+                            Nothing ->
+                                Nothing
+                    else
+                        case model.shooting of
+                            Just player ->
+                                if (player == model.left) then
+                                    Just left
+                                else
+                                    Just right
+
+                            Nothing ->
+                                Nothing
+            in
+                ( { model | ballsLeft = ballsLeft, left = left, right = right, shooting = shootingNext }
+                , Cmd.none
+                )
 
 
 css : String -> Html msg
@@ -194,17 +264,23 @@ viewPlayer player isShooting =
 
                 False ->
                     ""
+
+        totalAvg =
+            if (player.innings > 0) then
+                (round ((toFloat player.points / toFloat player.innings) * 10.0) |> toFloat) / 10.0
+            else
+                0.0
     in
         div []
             [ p [ class ("big-auto-size" ++ " " ++ style) ] [ text (player.points |> toString) ]
             , div [ class ("level" ++ " " ++ style) ]
                 [ div [ class "level-item has-text-centered" ]
                     [ p [ class "heading" ] [ text "AN" ]
-                    , p [ class "title" ] [ text (player.inning |> toString) ]
+                    , p [ class "title" ] [ text (player.innings |> toString) ]
                     ]
                 , div [ class "level-item has-text-centered" ]
                     [ p [ class "heading" ] [ text "GD" ]
-                    , p [ class "title" ] [ text "?" ]
+                    , p [ class "title" ] [ text (totalAvg |> toString) ]
                     ]
                 , div [ class "level-item has-text-centered" ]
                     [ p [ class "heading" ] [ text "HA" ]
@@ -218,9 +294,18 @@ viewPlayer player isShooting =
             ]
 
 
-viewBall : Int -> Html Msg
-viewBall n =
-    img [ alt (toString n), src ("img/" ++ (toString n) ++ "B.svg"), onClick (BallsLeft n) ] []
+viewBall : Int -> Int -> Html Msg
+viewBall max n =
+    let
+        maybeHidden =
+            if (n > max) then
+                Html.Attributes.hidden True
+            else
+                Html.Attributes.hidden False
+    in
+        div [ maybeHidden ]
+            [ img [ alt (toString n), src ("img/" ++ (toString n) ++ "B.svg"), onClick (BallsLeft n) ] []
+            ]
 
 
 viewGame : Model -> Html Msg
@@ -231,6 +316,9 @@ viewGame model =
 
         isRightShooting =
             (model.shooting == Just model.right)
+
+        max =
+            model.ballsLeft
     in
         div
             []
@@ -248,21 +336,21 @@ viewGame model =
                 ]
             , footer [ class "footer" ]
                 [ div [ class "container" ]
-                    [ viewBall 1
-                    , viewBall 2
-                    , viewBall 3
-                    , viewBall 4
-                    , viewBall 5
-                    , viewBall 6
-                    , viewBall 7
-                    , viewBall 8
-                    , viewBall 9
-                    , viewBall 10
-                    , viewBall 11
-                    , viewBall 12
-                    , viewBall 13
-                    , viewBall 14
-                    , viewBall 15
+                    [ viewBall max 1
+                    , viewBall max 2
+                    , viewBall max 3
+                    , viewBall max 4
+                    , viewBall max 5
+                    , viewBall max 6
+                    , viewBall max 7
+                    , viewBall max 8
+                    , viewBall max 9
+                    , viewBall max 10
+                    , viewBall max 11
+                    , viewBall max 12
+                    , viewBall max 13
+                    , viewBall max 14
+                    , viewBall max 15
                     ]
                 ]
             ]
