@@ -30,6 +30,7 @@ type alias Model =
     , right : Player
     , shooting : Maybe Player
     , ballsLeft : Int
+    , winner : Maybe Player
     }
 
 
@@ -55,6 +56,7 @@ init =
       , right = Player Right 0 0
       , shooting = Nothing
       , ballsLeft = 15
+      , winner = Nothing
       }
     , Cmd.none
     )
@@ -63,6 +65,21 @@ init =
 canBreak : Model -> Bool
 canBreak model =
     isJust model.runTo
+
+
+determineWinner : Maybe Int -> Player -> Player -> Maybe Player
+determineWinner runTo left right =
+    case runTo of
+        Just runTo ->
+            if (left.points >= runTo) then
+                Just left
+            else if (right.points >= runTo) then
+                Just right
+            else
+                Nothing
+
+        Nothing ->
+            Nothing
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -168,6 +185,9 @@ update msg model =
 
                             Nothing ->
                                 Nothing
+
+                winner =
+                    determineWinner model.runTo left right
             in
                 ( { model | ballsLeft = ballsLeft, left = left, right = right, shooting = shootingNext }
                 , Cmd.none
