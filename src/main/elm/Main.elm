@@ -67,6 +67,30 @@ canBreak model =
     isJust model.runTo
 
 
+determineShootingNext : Maybe Player -> Bool -> Player -> Player -> Maybe Player
+determineShootingNext shootingPrevious playerSwitch left right =
+    if (playerSwitch) then
+        case shootingPrevious of
+            Just player ->
+                if (player == left) then
+                    Just right
+                else
+                    Just left
+
+            Nothing ->
+                Nothing
+    else
+        case shootingPrevious of
+            Just player ->
+                if (player == left) then
+                    Just left
+                else
+                    Just right
+
+            Nothing ->
+                Nothing
+
+
 determineWinner : Maybe Int -> Player -> Player -> Maybe Player
 determineWinner runTo left right =
     case runTo of
@@ -165,26 +189,7 @@ update msg model =
                         n
 
                 shootingNext =
-                    if (playerSwitch) then
-                        case model.shooting of
-                            Just player ->
-                                if (player == model.left) then
-                                    Just right
-                                else
-                                    Just left
-
-                            Nothing ->
-                                Nothing
-                    else
-                        case model.shooting of
-                            Just player ->
-                                if (player == model.left) then
-                                    Just left
-                                else
-                                    Just right
-
-                            Nothing ->
-                                Nothing
+                    determineShootingNext model.shooting playerSwitch left right
 
                 winner =
                     determineWinner model.runTo left right

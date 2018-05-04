@@ -1,9 +1,46 @@
 module MainTest exposing (..)
 
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string, intRange)
+import Fuzz exposing (Fuzzer, bool, int, list, string, intRange)
 import Test exposing (..)
 import Main exposing (..)
+import Random.Pcg as Random
+import Shrink
+
+
+playerIdGen =
+    Random.bool
+        |> Random.andThen
+            (\b ->
+                if b then
+                    Random.constant Left
+                else
+                    Random.constant Right
+            )
+
+
+playerId : Fuzzer PlayerId
+playerId =
+    let
+        generator =
+            playerIdGen
+
+        shrinker playerId =
+            Shrink.noShrink playerId
+    in
+        Fuzz.custom generator shrinker
+
+
+player : Fuzzer Player
+player =
+    let
+        generator =
+            Random.map3 Player playerIdGen (Random.int 0 31) (Random.int 0 31)
+
+        shrinker playerId =
+            Shrink.noShrink playerId
+    in
+        Fuzz.custom generator shrinker
 
 
 suite : Test
@@ -43,5 +80,18 @@ suite =
                     in
                         determineWinner (Just toPoints) left right
                             |> Expect.equal Nothing
+            ]
+        , describe "determine shooting next"
+            [ fuzz3 bool player player "is always 'shootingPreviously' when no switch" <|
+                \bool left right ->
+                    let
+                        shootingPreviously =
+                            if (bool) then
+                                Just left
+                            else
+                                Just right
+                    in
+                        determineShootingNext shootingPreviously False left right
+                            |> Expect.equal shootingPreviously
             ]
         ]
