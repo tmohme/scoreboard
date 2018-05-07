@@ -67,6 +67,22 @@ canBreak model =
     isJust model.runTo
 
 
+updatedPlayer : Player -> Maybe Player -> Int -> Int -> Player
+updatedPlayer player shooting shotBalls inningIncrement =
+    case shooting of
+        Just someone ->
+            if (someone == player) then
+                { someone
+                    | points = someone.points + shotBalls
+                    , innings = someone.innings + inningIncrement
+                }
+            else
+                player
+
+        Nothing ->
+            player
+
+
 determineShootingNext : Maybe Player -> Bool -> Player -> Player -> Maybe Player
 determineShootingNext shootingPrevious playerSwitch left right =
     if (playerSwitch) then
@@ -155,32 +171,10 @@ update msg model =
                             0
 
                 left =
-                    case model.shooting of
-                        Just player ->
-                            if (player == model.left) then
-                                { player
-                                    | points = player.points + shotBalls
-                                    , innings = player.innings + inningIncrement
-                                }
-                            else
-                                model.left
-
-                        Nothing ->
-                            model.left
+                    updatedPlayer model.left model.shooting shotBalls inningIncrement
 
                 right =
-                    case model.shooting of
-                        Just player ->
-                            if (player == model.right) then
-                                { player
-                                    | points = player.points + shotBalls
-                                    , innings = player.innings + inningIncrement
-                                }
-                            else
-                                model.right
-
-                        Nothing ->
-                            model.right
+                    updatedPlayer model.right model.shooting shotBalls inningIncrement
 
                 ballsLeft =
                     if (n == 1) then
