@@ -14,6 +14,12 @@ type Page
     | Game
 
 
+type ShowWinner
+    = NotYet
+    | ShowWinner PlayerId
+    | AlreadyShown
+
+
 type Msg
     = LeftBreak
     | RightBreak
@@ -21,18 +27,20 @@ type Msg
     | SetRunTo
     | ToggleRunTo
     | BallsLeft Int
+    | WinnerShown
 
 
 type alias Model =
     { runTo : Maybe Int
     , runToBuffer : Maybe Int
-    , isPopUpActive : Bool
+    , isSettingRunTo : Bool
     , page : Page
     , left : Player
     , right : Player
     , shooting : Maybe Player
     , ballsLeft : Int
     , winner : Maybe Player
+    , showWinner : ShowWinner
     }
 
 
@@ -52,13 +60,14 @@ init : ( Model, Cmd Msg )
 init =
     ( { runTo = Nothing
       , runToBuffer = Just 80
-      , isPopUpActive = False
+      , isSettingRunTo = False
       , page = Entrance
       , left = Player Left 0 0
       , right = Player Right 0 0
       , shooting = Nothing
       , ballsLeft = 15
       , winner = Nothing
+      , showWinner = NotYet
       }
     , Cmd.none
     )
@@ -139,12 +148,12 @@ update msg model =
             )
 
         SetRunTo ->
-            ( { model | isPopUpActive = False, runTo = model.runToBuffer }
+            ( { model | isSettingRunTo = False, runTo = model.runToBuffer }
             , Cmd.none
             )
 
         ToggleRunTo ->
-            ( { model | isPopUpActive = not model.isPopUpActive }
+            ( { model | isSettingRunTo = not model.isSettingRunTo }
             , Cmd.none
             )
 
@@ -187,10 +196,33 @@ update msg model =
 
                 winner =
                     determineWinner model.runTo left right
+
+                showWinner =
+                    case ( winner, model.showWinner ) of
+                        ( Nothing, _ ) ->
+                            NotYet
+
+                        ( Just player, NotYet ) ->
+                            ShowWinner player.id
+
+                        ( Just player, _ ) ->
+                            AlreadyShown
             in
-                ( { model | ballsLeft = ballsLeft, left = left, right = right, shooting = shootingNext }
+                ( { model
+                    | ballsLeft = ballsLeft
+                    , left = left
+                    , right = right
+                    , shooting = shootingNext
+                    , winner = winner
+                    , showWinner = showWinner
+                  }
                 , Cmd.none
                 )
+
+        WinnerShown ->
+            ( { model | showWinner = AlreadyShown }
+            , Cmd.none
+            )
 
 
 css : String -> Html msg
@@ -257,6 +289,35 @@ viewRunToModalDialog model =
             ]
 
 
+viewWinnerModalDialog : PlayerId -> Html Msg
+viewWinnerModalDialog playerId =
+    div [ class "modal is-active", attribute "aria-label" "Modal title" ]
+        [ div [ class "modal-background", onClick WinnerShown ]
+            []
+        , div [ class "modal-card" ]
+            [ Html.form [ action "", onWithOptions "submit" { preventDefault = True, stopPropagation = True } (Json.Decode.succeed WinnerShown) ]
+                [ Html.header
+                    [ class "modal-card-head" ]
+                    [ p [ class "modal-card-title" ]
+                        [ text "Gewinner" ]
+                    , button [ class "delete", onClick WinnerShown, attribute "aria-label" "close" ]
+                        []
+                    ]
+                , section [ class "modal-card-body" ]
+                    [ div [ class "field" ]
+                        [ label [ class "label" ] [ text "Der Gewinner ist" ]
+                        , text (toString playerId)
+                        ]
+                    ]
+                , footer [ class "modal-card-foot" ]
+                    [ button [ type_ "button", class "button is-primary", onClick WinnerShown, attribute "aria-label" "OK" ]
+                        [ text "OK" ]
+                    ]
+                ]
+            ]
+        ]
+
+
 viewEntrance : Model -> Html Msg
 viewEntrance model =
     nav [ class "level" ]
@@ -266,7 +327,7 @@ viewEntrance model =
             [ runTo ]
         , div [ class "level-item has-test-cenered" ]
             [ breakButton model RightBreak ]
-        , if model.isPopUpActive then
+        , if model.isSettingRunTo then
             viewRunToModalDialog model
           else
             text ""
@@ -372,6 +433,12 @@ viewGame model =
                     , viewBall max 15
                     ]
                 ]
+            , case model.showWinner of
+                ShowWinner winnerId ->
+                    viewWinnerModalDialog winnerId
+
+                _ ->
+                    text ""
             ]
 
 
