@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+-- import Debug exposing (log)
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -83,12 +85,12 @@ updatedPlayer player shooting shotBalls inningIncrement =
             player
 
 
-determineShootingNext : Maybe Player -> Bool -> Player -> Player -> Maybe Player
+determineShootingNext : Maybe PlayerId -> Bool -> Player -> Player -> Maybe Player
 determineShootingNext shootingPrevious playerSwitch left right =
     if (playerSwitch) then
         case shootingPrevious of
-            Just player ->
-                if (player == left) then
+            Just id ->
+                if (id == left.id) then
                     Just right
                 else
                     Just left
@@ -97,8 +99,8 @@ determineShootingNext shootingPrevious playerSwitch left right =
                 Nothing
     else
         case shootingPrevious of
-            Just player ->
-                if (player == left) then
+            Just id ->
+                if (id == left.id) then
                     Just left
                 else
                     Just right
@@ -126,18 +128,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LeftBreak ->
-            let
-                player =
-                    model.left
-            in
-                ( { model | page = Game, shooting = Just player, left = player }, Cmd.none )
+            ( { model | page = Game, shooting = Just model.left }, Cmd.none )
 
         RightBreak ->
-            let
-                player =
-                    model.right
-            in
-                ( { model | page = Game, shooting = Just player, right = player }, Cmd.none )
+            ( { model | page = Game, shooting = Just model.right }, Cmd.none )
 
         RunToInput s ->
             ( { model | runToBuffer = String.toInt s |> Result.toMaybe }
@@ -183,7 +177,13 @@ update msg model =
                         n
 
                 shootingNext =
-                    determineShootingNext model.shooting playerSwitch left right
+                    determineShootingNext
+                        (model.shooting
+                            |> Maybe.map .id
+                        )
+                        playerSwitch
+                        left
+                        right
 
                 winner =
                     determineWinner model.runTo left right

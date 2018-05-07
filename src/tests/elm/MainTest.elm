@@ -83,6 +83,8 @@ suite =
                     in
                         determineWinner Nothing left right
                             |> Expect.equal Nothing
+
+            --
             , fuzz2
                 (intRange 0 10)
                 (intRange 0 10)
@@ -102,39 +104,96 @@ suite =
                         determineWinner (Just toPoints) left right
                             |> Expect.equal Nothing
             ]
+
+        --
         , describe "determine shooting next"
-            [ fuzz3 (intRange 0 2) leftPlayer rightPlayer "is always 'shootingPreviously' when no switch" <|
+            [ fuzz3
+                (intRange 0 2)
+                leftPlayer
+                rightPlayer
+                "is always 'shootingPreviously' when no switch"
+              <|
                 \n left right ->
                     let
                         shootingPreviously =
                             case n of
                                 1 ->
-                                    Just left
+                                    Just left.id
 
                                 2 ->
-                                    Just right
+                                    Just right.id
 
                                 _ ->
                                     Nothing
                     in
                         (determineShootingNext shootingPreviously False left right)
                             |> Maybe.map .id
-                            |> Expect.equal (shootingPreviously |> Maybe.map .id)
+                            |> Expect.equal shootingPreviously
+
+            --
+            , fuzz3
+                bool
+                leftPlayer
+                rightPlayer
+                "is never 'shootingPreviously' when switching from a player"
+              <|
+                \bool left right ->
+                    let
+                        shootingPreviously =
+                            case bool of
+                                True ->
+                                    Just left.id
+
+                                False ->
+                                    Just right.id
+                    in
+                        (determineShootingNext shootingPreviously True left right)
+                            |> Maybe.map .id
+                            |> Expect.notEqual shootingPreviously
             ]
+
+        --
         , describe "updatedPlayer"
-            [ fuzz3 player int int "is always the same player when no-one was shooting" <|
+            [ fuzz3
+                player
+                int
+                int
+                "is always the same player when no-one was shooting"
+              <|
                 \player shotBalls inningIncrement ->
                     updatedPlayer player Nothing shotBalls inningIncrement
                         |> Expect.equal player
-            , fuzz4 player player int int "is always the same player when someone was shooting" <|
+
+            --
+            , fuzz4
+                player
+                player
+                int
+                int
+                "is always the same player when someone was shooting"
+              <|
                 \player shooting shotBalls inningIncrement ->
                     updatedPlayer player (Just shooting) shotBalls inningIncrement
                         |> Expect.equal player
-            , fuzz3 player int int "has shooting player's points incremented" <|
+
+            --
+            , fuzz3
+                player
+                int
+                int
+                "has shooting player's points incremented"
+              <|
                 \player shotBalls inningIncrement ->
                     (updatedPlayer player (Just player) shotBalls inningIncrement).points
                         |> Expect.equal (player.points + shotBalls)
-            , fuzz3 player int int "has shooting player's innings incremented" <|
+
+            --
+            , fuzz3
+                player
+                int
+                int
+                "has shooting player's innings incremented"
+              <|
                 \player shotBalls inningIncrement ->
                     (updatedPlayer player (Just player) shotBalls inningIncrement).innings
                         |> Expect.equal (player.innings + inningIncrement)
