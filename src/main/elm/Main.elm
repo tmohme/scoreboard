@@ -26,7 +26,7 @@ type Msg
     | RunToInput String
     | SetRunTo
     | ToggleRunTo
-    | BallsLeft Int
+    | BallsLeftOnTable Int
     | WinnerShown
 
 
@@ -38,7 +38,7 @@ type alias Model =
     , left : Player
     , right : Player
     , shooting : Maybe Player
-    , ballsLeft : Int
+    , ballsLeftOnTable : Int
     , winner : Maybe Player
     , showWinner : ShowWinner
     }
@@ -53,7 +53,15 @@ type alias Player =
     { id : PlayerId
     , points : Int
     , innings : Int
+    , currentStreak : Int
+    , longestStreak : Int
+    , pointsAtStreakStart : Int
     }
+
+
+createPlayer : PlayerId -> Player
+createPlayer id =
+    Player id 0 0 0 0 0
 
 
 init : ( Model, Cmd Msg )
@@ -62,10 +70,10 @@ init =
       , runToBuffer = Just 80
       , isSettingRunTo = False
       , page = Entrance
-      , left = Player Left 0 0
-      , right = Player Right 0 0
+      , left = createPlayer Left
+      , right = createPlayer Right
       , shooting = Nothing
-      , ballsLeft = 15
+      , ballsLeftOnTable = 15
       , winner = Nothing
       , showWinner = NotYet
       }
@@ -78,17 +86,47 @@ canBreak model =
     isJust model.runTo
 
 
-updatedPlayer : Player -> Maybe Player -> Int -> Int -> Player
-updatedPlayer player shooting shotBalls inningIncrement =
+calculateCurrentStreak : Int -> Int -> Int -> Int
+calculateCurrentStreak previous increment limit =
+    Basics.min (previous + increment) limit
+
+
+updatedPlayer : Player -> Maybe Player -> Int -> Bool -> Int -> Player
+updatedPlayer player shooting shotBalls playerSwitch runTo =
     case shooting of
         Just someone ->
-            if (someone == player) then
-                { someone
-                    | points = someone.points + shotBalls
-                    , innings = someone.innings + inningIncrement
-                }
+            if (someone.id == player.id) then
+                -- TODO extract branch
+                let
+                    points =
+                        Basics.min (player.points + shotBalls) runTo
+
+                    inningIncrement =
+                        if (playerSwitch) then
+                            1
+                        else
+                            0
+
+                    maxBallsToRun =
+                        runTo - player.pointsAtStreakStart
+
+                    currentStreak =
+                        calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
+
+                    longestStreak =
+                        Basics.max player.longestStreak currentStreak
+                in
+                    { player
+                        | points = points
+                        , innings = player.innings + inningIncrement
+                        , currentStreak = currentStreak
+                        , longestStreak = longestStreak
+                    }
             else
-                player
+                { player
+                    | currentStreak = 0
+                    , pointsAtStreakStart = player.points
+                }
 
         Nothing ->
             player
@@ -157,29 +195,29 @@ update msg model =
             , Cmd.none
             )
 
-        BallsLeft n ->
+        BallsLeftOnTable n ->
             let
                 shotBalls =
-                    model.ballsLeft - n
+                    model.ballsLeftOnTable - n
+
+                gameFinished =
+                    case ( model.shooting, model.runTo ) of
+                        ( Just player, Just runTo ) ->
+                            (player.points + shotBalls) >= runTo
+
+                        ( _, _ ) ->
+                            False
 
                 playerSwitch =
-                    ((n > 1) || (model.ballsLeft == 1))
-
-                inningIncrement =
-                    case playerSwitch of
-                        True ->
-                            1
-
-                        False ->
-                            0
+                    gameFinished || (n > 1) || (model.ballsLeftOnTable == n)
 
                 left =
-                    updatedPlayer model.left model.shooting shotBalls inningIncrement
+                    updatedPlayer model.left model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
 
                 right =
-                    updatedPlayer model.right model.shooting shotBalls inningIncrement
+                    updatedPlayer model.right model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
 
-                ballsLeft =
+                ballsOnTable =
                     if (n == 1) then
                         15
                     else
@@ -209,7 +247,7 @@ update msg model =
                             AlreadyShown
             in
                 ( { model
-                    | ballsLeft = ballsLeft
+                    | ballsLeftOnTable = ballsOnTable
                     , left = left
                     , right = right
                     , shooting = shootingNext
@@ -364,7 +402,7 @@ viewPlayer player isShooting =
                     ]
                 , div [ class "level-item has-text-centered" ]
                     [ p [ class "heading" ] [ text "HA" ]
-                    , p [ class "title" ] [ text "?" ]
+                    , p [ class "title" ] [ text (player.longestStreak |> toString) ]
                     ]
                 , div [ class "level-item has-text-centered" ]
                     [ p [ class "heading" ] [ text "Fouls" ]
@@ -384,7 +422,7 @@ viewBall max n =
                 Html.Attributes.hidden False
     in
         div [ maybeHidden ]
-            [ img [ alt (toString n), src ("img/" ++ (toString n) ++ "B.svg"), onClick (BallsLeft n) ] []
+            [ img [ alt (toString n), src ("img/" ++ (toString n) ++ "B.svg"), onClick (BallsLeftOnTable n) ] []
             ]
 
 
@@ -398,7 +436,7 @@ viewGame model =
             (model.shooting == Just model.right)
 
         max =
-            model.ballsLeft
+            model.ballsLeftOnTable
     in
         div
             []
