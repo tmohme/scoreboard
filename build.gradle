@@ -1,6 +1,12 @@
 plugins {
   id "base"
+  id "groovy"
   id "org.mohme.gradle.elm-plugin" version "1.0.0"
+  id "io.ratpack.ratpack-groovy" version "1.5.4"
+}
+
+repositories {
+  jcenter()
 }
 
 group 'org.mohme'
@@ -9,15 +15,16 @@ version '1.0-SNAPSHOT'
 elmMake {
   executable = '/usr/local/bin/elm-make'
   sourceDir = project.file('src/main/elm')
+  buildDir project.file('build/resources/main/web-resources/public/elm')
   targetModuleName = 'main.js'
   debug = true
   warn = true
 }
 
-task copy(type: Copy, group: "build", description: "Copy ressources") {
-  from "src/main/ressources"
-  into "build"
-}
+configureRun.dependsOn(elmMake)
 
-assemble.dependsOn(elmMake)
-assemble.dependsOn(copy)
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.4.12'
+  runtime 'org.apache.ivy:ivy:2.4.0'
+  runtime 'ch.qos.logback:logback-classic:1.2.3'
+}
