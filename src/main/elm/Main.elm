@@ -2,7 +2,7 @@ module Main exposing (Model, Msg(..), Page(..), Player, PlayerId(..), ShowWinner
 
 -- import Debug exposing (log)
 
-import Browser exposing (..)
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -103,14 +103,14 @@ calculateCurrentStreak previous increment limit =
 
 
 updatedPlayer : Player -> Maybe Player -> Int -> Bool -> Int -> Player
-updatedPlayer player shooting shotBalls playerSwitch runTo =
+updatedPlayer player shooting shotBalls playerSwitch runToPoints =
     case shooting of
         Just someone ->
             if someone.id == player.id then
                 -- TODO extract branch
                 let
                     points =
-                        Basics.min (player.points + shotBalls) runTo
+                        Basics.min (player.points + shotBalls) runToPoints
 
                     inningIncrement =
                         if playerSwitch then
@@ -120,7 +120,7 @@ updatedPlayer player shooting shotBalls playerSwitch runTo =
                             0
 
                     maxBallsToRun =
-                        runTo - player.pointsAtStreakStart
+                        runToPoints - player.pointsAtStreakStart
 
                     currentStreak =
                         calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
@@ -173,13 +173,13 @@ determineShootingNext shootingPrevious playerSwitch left right =
 
 
 determineWinner : Maybe Int -> Player -> Player -> Maybe Player
-determineWinner runTo left right =
-    case runTo of
-        Just value ->
-            if left.points >= value then
+determineWinner runToPoints left right =
+    case runToPoints of
+        Just points ->
+            if (left.points >= points) then
                 Just left
 
-            else if right.points >= value then
+            else if (right.points >= points) then
                 Just right
 
             else
@@ -218,8 +218,8 @@ update msg model =
 
                 gameFinished =
                     case ( model.shooting, model.runTo ) of
-                        ( Just player, Just runTo ) ->
-                            (player.points + shotBalls) >= runTo
+                        ( Just player, Just runToPoints ) ->
+                            (player.points + shotBalls) >= runToPoints
 
                         ( _, _ ) ->
                             False
@@ -287,7 +287,7 @@ css path =
 
 bulma : Html msg
 bulma =
-    css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.0/css/bulma.min.css"
+    css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css"
 
 
 viewHeader : Html Msg
@@ -361,7 +361,7 @@ viewWinnerModalDialog playerId =
                 , section [ class "modal-card-body" ]
                     [ div [ class "field" ]
                         [ label [ class "label" ] [ text "Der Gewinner ist" ]
-                        , text (toString playerId)
+                        , text (nameOf playerId)
                         ]
                     ]
                 , footer [ class "modal-card-foot" ]
@@ -524,10 +524,7 @@ subscriptions model =
     Sub.none
 
 
-
---
-
-
+main : Program Never Model Msg
 main =
     Browser.element
         { init = init
