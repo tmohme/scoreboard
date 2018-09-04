@@ -11,6 +11,7 @@ clean.doFirst {
 }
 
 elmMake {
+  executable = '/usr/local/bin/elm-0.19'
   sourceDir = project.file('src/main/elm')
   targetModuleName = 'main.js'
   debug = true

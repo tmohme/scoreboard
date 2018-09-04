@@ -50,14 +50,14 @@ type PlayerId
     | Right
 
 
-toString : PlayerId -> String
-toString id =
-    case id of
+nameOf : PlayerId -> String
+nameOf playerId =
+    case playerId of
         Left ->
-            "left"
+            "Left"
 
         Right ->
-            "right"
+            "Right"
 
 
 type alias Player =
@@ -176,10 +176,10 @@ determineWinner : Maybe Int -> Player -> Player -> Maybe Player
 determineWinner runToPoints left right =
     case runToPoints of
         Just points ->
-            if (left.points >= points) then
+            if left.points >= points then
                 Just left
 
-            else if (right.points >= points) then
+            else if right.points >= points then
                 Just right
 
             else
@@ -263,15 +263,14 @@ update msg model =
                         ( Just player, _ ) ->
                             AlreadyShown
             in
-            ( { model
+            ({ model
                 | ballsLeftOnTable = ballsOnTable
                 , left = left
                 , right = right
                 , shooting = shootingNext
                 , winner = winner
                 , showWinner = showWinner
-              }
-            , Cmd.none
+            }, Cmd.none
             )
 
         WinnerShown ->
@@ -524,7 +523,7 @@ subscriptions model =
     Sub.none
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
