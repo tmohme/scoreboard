@@ -1,2 +1,9 @@
-rootProject.name = 'scoreboard'
 
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'scoreboard'

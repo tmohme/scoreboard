@@ -1,21 +1,19 @@
 plugins {
   id "base"
-  id "org.mohme.gradle.elm-plugin" version "1.0.0"
+  id "org.mohme.gradle.elm-plugin" version "2.0.2-SNAPSHOT"
 }
 
 group 'org.mohme'
 version '1.0-SNAPSHOT'
 
 elmMake {
-  executable = '/usr/local/bin/elm-make'
   sourceDir = project.file('src/main/elm')
   targetModuleName = 'main.js'
   debug = true
-  warn = true
 }
 
-task copy(type: Copy, group: "build", description: "Copy ressources") {
-  from "src/main/ressources"
+task copy(type: Copy, group: "build", description: "Copy resources") {
+  from "src/main/resources"
   into "build"
 }
 
