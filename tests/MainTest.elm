@@ -1,21 +1,22 @@
-module MainTest exposing (..)
+module MainTest exposing (leftPlayer, leftPlayerGen, maybePlayer, player, playerGen, playerId, playerIdGen, playerIdShrinker, playerShrinker, rightPlayer, rightPlayerGen, suite, validPlayer)
 
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, bool, int, list, string, intRange)
-import Test exposing (..)
+import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
 import Main exposing (..)
-import Random.Pcg as Random exposing (Generator)
+import Random exposing (Generator, map)
+import Random.Extra exposing (andMap)
 import Shrink exposing (Shrinker)
+import Test exposing (..)
 
 
-playerIdGen : Generator PlayerId
+playerIdGen : Random.Generator PlayerId
 playerIdGen =
-    Random.choice Left Right
+    Random.Extra.choice Left Right
 
 
 playerIdShrinker : Shrinker PlayerId
-playerIdShrinker playerId =
-    Shrink.noShrink playerId
+playerIdShrinker pid =
+    Shrink.noShrink pid
 
 
 playerId : Fuzzer PlayerId
@@ -34,7 +35,7 @@ rightPlayerGen =
 
 
 validPlayer : PlayerId -> Int -> Int -> Int -> Int -> Int -> Player
-validPlayer id points innings currentStreak longestStreak pointsAtStreakStart =
+validPlayer pid points innings currentStreak longestStreak pointsAtStreakStart =
     let
         vCurrentStreak =
             Basics.min points currentStreak
@@ -45,17 +46,18 @@ validPlayer id points innings currentStreak longestStreak pointsAtStreakStart =
         vPointsAtStreakStart =
             points - vCurrentStreak
     in
-        Player id points innings vCurrentStreak vLongestStreak vPointsAtStreakStart
+    Player pid points innings vCurrentStreak vLongestStreak vPointsAtStreakStart
 
 
 playerGen : Generator Player
 playerGen =
-    Random.map validPlayer playerIdGen
-        |> Random.andMap (Random.int 0 31)
-        |> Random.andMap (Random.int 0 31)
-        |> Random.andMap (Random.int 0 7)
-        |> Random.andMap (Random.int 0 15)
-        |> Random.andMap (Random.constant 0)
+    Random.map validPlayer
+        playerIdGen
+        |> andMap (Random.int 0 31)
+        |> andMap (Random.int 0 31)
+        |> andMap (Random.int 0 7)
+        |> andMap (Random.int 0 15)
+        |> andMap (Random.constant 0)
 
 
 
@@ -63,8 +65,8 @@ playerGen =
 
 
 playerShrinker : Shrinker Player
-playerShrinker player =
-    Shrink.noShrink player
+playerShrinker aPlayer =
+    Shrink.noShrink aPlayer
 
 
 leftPlayer : Fuzzer Player
@@ -86,12 +88,12 @@ maybePlayer : Fuzzer (Maybe Player)
 maybePlayer =
     let
         generator =
-            Random.maybe Random.bool playerGen
+            Random.Extra.maybe Random.Extra.bool playerGen
 
-        shrinker maybePlayer =
-            Shrink.maybe playerShrinker maybePlayer
+        shrinker aMaybePlayer =
+            Shrink.maybe playerShrinker aMaybePlayer
     in
-        Fuzz.custom generator shrinker
+    Fuzz.custom generator shrinker
 
 
 suite : Test
@@ -111,8 +113,8 @@ suite =
                         right =
                             Player Right rPoints 0 0 0 0
                     in
-                        determineWinner Nothing left right
-                            |> Expect.equal Nothing
+                    determineWinner Nothing left right
+                        |> Expect.equal Nothing
 
             --
             , fuzz2
@@ -131,8 +133,8 @@ suite =
                         toPoints =
                             max (lPoints + 1) (rPoints + 1)
                     in
-                        determineWinner (Just toPoints) left right
-                            |> Expect.equal Nothing
+                    determineWinner (Just toPoints) left right
+                        |> Expect.equal Nothing
             ]
 
         --
@@ -156,9 +158,9 @@ suite =
                                 _ ->
                                     Nothing
                     in
-                        (determineShootingNext shootingPreviously False left right)
-                            |> Maybe.map .id
-                            |> Expect.equal shootingPreviously
+                    determineShootingNext shootingPreviously False left right
+                        |> Maybe.map .id
+                        |> Expect.equal shootingPreviously
 
             --
             , fuzz3
@@ -177,9 +179,9 @@ suite =
                                 False ->
                                     Just right.id
                     in
-                        (determineShootingNext shootingPreviously True left right)
-                            |> Maybe.map .id
-                            |> Expect.notEqual shootingPreviously
+                    determineShootingNext shootingPreviously True left right
+                        |> Maybe.map .id
+                        |> Expect.notEqual shootingPreviously
             ]
 
         --
@@ -192,9 +194,9 @@ suite =
                 \previous increment ->
                     let
                         limit =
-                            (Basics.max previous increment)
+                            Basics.max previous increment
                     in
-                        (calculateCurrentStreak previous increment limit) |> Expect.atMost limit
+                    calculateCurrentStreak previous increment limit |> Expect.atMost limit
 
             --
             , fuzz2
@@ -205,9 +207,9 @@ suite =
                 \previous increment ->
                     let
                         limit =
-                            (Basics.max previous increment) + 1
+                            Basics.max previous increment + 1
                     in
-                        (calculateCurrentStreak previous increment limit) |> Expect.atLeast previous
+                    calculateCurrentStreak previous increment limit |> Expect.atLeast previous
 
             --
             , fuzz2
@@ -218,10 +220,10 @@ suite =
                 \previous increment ->
                     let
                         limit =
-                            (Basics.max previous increment)
+                            Basics.max previous increment
                     in
-                        (calculateCurrentStreak previous increment limit)
-                            |> Expect.atLeast (Basics.min previous increment)
+                    calculateCurrentStreak previous increment limit
+                        |> Expect.atLeast (Basics.min previous increment)
 
             --
             , fuzz2
@@ -232,37 +234,33 @@ suite =
                 \previous increment ->
                     let
                         limit =
-                            (Basics.max previous increment)
+                            Basics.max previous increment
                     in
-                        (calculateCurrentStreak previous increment limit)
-                            |> Expect.atLeast (Basics.min increment limit)
+                    calculateCurrentStreak previous increment limit
+                        |> Expect.atLeast (Basics.min increment limit)
             ]
 
         --
         , describe "updatedPlayer"
-            [ fuzz4
-                player
-                int
-                bool
+            [ fuzz2
+                (tuple3 ( player, int, bool ))
                 (intRange 1 150)
                 "is always the same player when no-one was shooting"
               <|
-                \player shotBalls switchPlayer runTo ->
-                    (updatedPlayer player Nothing shotBalls switchPlayer runTo).id
-                        |> Expect.equal (player.id)
+                \( aPlayer, shotBalls, switchPlayer ) runTo ->
+                    (updatedPlayer aPlayer Nothing shotBalls switchPlayer runTo).id
+                        |> Expect.equal aPlayer.id
 
             --
-            , fuzz5
+            , fuzz3
                 player
-                player
-                int
-                bool
+                (tuple3 ( player, int, bool ))
                 (intRange 1 150)
                 "is always the same player when someone was shooting"
               <|
-                \player shooting shotBalls switchPlayer runTo ->
-                    (updatedPlayer player (Just shooting) shotBalls switchPlayer runTo).id
-                        |> Expect.equal (player.id)
+                \aPlayer ( shooting, shotBalls, switchPlayer ) runTo ->
+                    (updatedPlayer aPlayer (Just shooting) shotBalls switchPlayer runTo).id
+                        |> Expect.equal aPlayer.id
 
             --
             , fuzz3
@@ -271,13 +269,13 @@ suite =
                 bool
                 "has shooting player's points incremented when not yet won"
               <|
-                \player shotBalls switchPlayer ->
+                \aPlayer shotBalls switchPlayer ->
                     let
                         runTo =
-                            player.points + shotBalls + 1
+                            aPlayer.points + shotBalls + 1
                     in
-                        (updatedPlayer player (Just player) shotBalls switchPlayer runTo).points
-                            |> Expect.equal (player.points + shotBalls)
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls switchPlayer runTo).points
+                        |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
@@ -286,13 +284,13 @@ suite =
                 bool
                 "has shooting player's points incremented when exactly won"
               <|
-                \player shotBalls switchPlayer ->
+                \aPlayer shotBalls switchPlayer ->
                     let
                         runTo =
-                            player.points + shotBalls
+                            aPlayer.points + shotBalls
                     in
-                        (updatedPlayer player (Just player) shotBalls switchPlayer runTo).points
-                            |> Expect.equal (player.points + shotBalls)
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls switchPlayer runTo).points
+                        |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
@@ -301,41 +299,38 @@ suite =
                 bool
                 "has shooting player's points limited incremented when overshot"
               <|
-                \player shotBalls switchPlayer ->
+                \aPlayer shotBalls switchPlayer ->
                     let
                         runTo =
-                            player.points + shotBalls - 1
+                            aPlayer.points + shotBalls - 1
                     in
-                        (updatedPlayer player (Just player) shotBalls switchPlayer runTo).points
-                            |> Expect.equal runTo
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls switchPlayer runTo).points
+                        |> Expect.equal runTo
 
             --
-            , fuzz4
+            , fuzz3
                 player
                 int
-                bool
                 (intRange 1 150)
-                "has shooting player's innings incremented"
+                "has shooting player's innings incremented after a switch"
               <|
-                \player shotBalls switchPlayer runTo ->
-                    (updatedPlayer player (Just player) shotBalls True runTo).innings
-                        |> Expect.equal (player.innings + 1)
+                \aPlayer shotBalls runTo ->
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls True runTo).innings
+                        |> Expect.equal (aPlayer.innings + 1)
 
             --
-            , fuzz4
-                player
-                int
-                bool
+            , fuzz2
+                (tuple3 ( player, int, bool ))
                 (intRange 1 150)
                 "strictly monotonically increments longestStreak"
               <|
-                \player shotBalls switchPlayer runTo ->
+                \( aPlayer, shotBalls, switchPlayer ) runTo ->
                     let
                         prevLongestStreak =
-                            player.longestStreak
+                            aPlayer.longestStreak
                     in
-                        (updatedPlayer player (Just player) shotBalls switchPlayer runTo).longestStreak
-                            |> Expect.atLeast prevLongestStreak
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls switchPlayer runTo).longestStreak
+                        |> Expect.atLeast prevLongestStreak
 
             --
             , fuzz2
@@ -343,16 +338,16 @@ suite =
                 int
                 "sets currentStreak when no switch and not won"
               <|
-                \player shotBalls ->
+                \aPlayer shotBalls ->
                     let
                         prevCurrentStreak =
-                            player.currentStreak
+                            aPlayer.currentStreak
 
                         runTo =
-                            player.points + player.currentStreak + shotBalls + 1
+                            aPlayer.points + aPlayer.currentStreak + shotBalls + 1
                     in
-                        (updatedPlayer player (Just player) shotBalls False runTo).currentStreak
-                            |> Expect.equal (prevCurrentStreak + shotBalls)
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls False runTo).currentStreak
+                        |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
             , fuzz2
@@ -360,27 +355,26 @@ suite =
                 int
                 "sets currentStreak when no switch and exactly won"
               <|
-                \player shotBalls ->
+                \aPlayer shotBalls ->
                     let
                         prevCurrentStreak =
-                            player.currentStreak
+                            aPlayer.currentStreak
 
                         runTo =
-                            player.points + player.currentStreak + shotBalls
+                            aPlayer.points + aPlayer.currentStreak + shotBalls
                     in
-                        (updatedPlayer player (Just player) shotBalls False runTo).currentStreak
-                            |> Expect.equal (prevCurrentStreak + shotBalls)
+                    (updatedPlayer aPlayer (Just aPlayer) shotBalls False runTo).currentStreak
+                        |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
-            , fuzz4
-                leftPlayer
-                rightPlayer
+            , fuzz3
+                (tuple ( leftPlayer, rightPlayer ))
                 int
                 (intRange 1 150)
                 "resets currentStreak after switchPlayer"
               <|
-                \leftPlayer rightPlayer shotBalls runTo ->
-                    (updatedPlayer leftPlayer (Just rightPlayer) shotBalls True runTo).currentStreak
+                \( left, right ) shotBalls runTo ->
+                    (updatedPlayer left (Just right) shotBalls True runTo).currentStreak
                         |> Expect.equal 0
             ]
         ]
