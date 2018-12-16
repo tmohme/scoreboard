@@ -6,10 +6,15 @@ plugins {
 group 'org.mohme'
 version '1.0-SNAPSHOT'
 
+clean.doFirst {
+  delete '${rootDir}/elm-stuff'
+}
+
 elmMake {
   sourceDir = project.file('src/main/elm')
   targetModuleName = 'main.js'
   debug = true
+  optimize = false
 }
 
 task copy(type: Copy, group: "build", description: "Copy resources") {
