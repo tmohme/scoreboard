@@ -6,4 +6,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'scoreboard'
+rootProject.name = "scoreboard"
