@@ -1,22 +1,23 @@
 import org.mohme.gradle.ElmMakeTask
+import org.mohme.gradle.ElmPluginExtension
 
 plugins {
   base
-  id("org.mohme.gradle.elm-plugin" ) version "2.1.0-SNAPSHOT"
+  id("org.mohme.gradle.elm-plugin" ) version "3.0.0"
 }
 
 group = "org.mohme"
 version = "1.0-SNAPSHOT"
 
 elm {
-  setSourceDir(project.file("src/main/elm"))
-  setTargetModuleName("main.js")
-  setDebug(true)
-  setOptimize(false)
+  sourceDir.set(project.file("src/main/elm"))
+  targetModuleName.set("main.js")
+  debug.set(true)
+  optimize.set(false)
 }
 
 tasks {
-  getByName("clean", Delete::class) {
+  named("clean", Delete::class) {
     delete("${rootDir}/elm-stuff")
   }
 
@@ -27,7 +28,7 @@ tasks {
     into("${buildDir}")
   }
 
-  getByName("assemble") {
+  named("assemble") {
     dependsOn("elmMake", copy)
   }
 }
