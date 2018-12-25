@@ -1,4 +1,17 @@
-module Game exposing (Model, Msg(..), Player, calculateCurrentStreak, createPlayer, determineShootingNext, determineWinner, init, start, update, updatedPlayer, view)
+module Game exposing
+    ( Model
+    , Msg(..)
+    , Player
+    , calculateCurrentStreak
+    , createPlayer
+    , determineShootingNext
+    , determineWinner
+    , init
+    , start
+    , update
+    , updatedPlayer
+    , view
+    )
 
 import Application as App
 import Html exposing (..)
@@ -39,12 +52,16 @@ type ShowWinner
     | AlreadyShown
 
 
+fullRack =
+    15
+
+
 init : Model
 init =
     { left = createPlayer App.Left
     , right = createPlayer App.Right
     , shooting = Nothing
-    , ballsLeftOnTable = 15
+    , ballsLeftOnTable = fullRack
     , runTo = Nothing
     , winner = Nothing
     , showWinner = NotYet
@@ -194,7 +211,7 @@ update msg model =
 
                 ballsOnTable =
                     if n == 1 then
-                        15
+                        fullRack
 
                     else
                         n
@@ -286,7 +303,7 @@ viewBall max n =
             else
                 Html.Attributes.hidden False
     in
-    div [ maybeHidden ]
+    button [ maybeHidden, class "button tile" ]
         [ img [ alt (String.fromInt n), src ("img/" ++ String.fromInt n ++ "B.svg"), onClick (BallsLeftOnTable n) ] []
         ]
 
@@ -337,23 +354,22 @@ view model =
         [ div
             [ class "columns" ]
             [ div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
-            , div [ class "column is-one-fifth is-centered  has-text-centered" ]
-                [ button [ class "button", disabled True ] [ text "Vollbild" ]
-                , button [ class "button", disabled True ] [ text "RunTo" ]
-                , button [ class "button", disabled True ] [ text "Pause / Weiter" ]
-                , button [ class "button", disabled True ] [ text "Log / Undo" ]
-                , button [ class "button", disabled True ] [ text "Ende" ]
+            , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
+                [ button [ class "button tile", disabled True ] [ text "Vollbild" ]
+                , button [ class "button tile", disabled True ] [ text "RunTo" ]
+                , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
+                , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
+                , button [ class "button tile", disabled True ] [ text "Ende" ]
                 ]
             , div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
             ]
-        , footer [ class "footer" ]
-            [ div [ class "container" ]
-                (List.range
-                    1
-                    15
-                    |> List.map (\n -> viewBall max n)
-                )
-            ]
+        , div
+            [ class "tile is-ancestor" ]
+            (List.range
+                1
+                fullRack
+                |> List.map (\n -> viewBall max n)
+            )
         , case model.showWinner of
             ShowWinner winnerId ->
                 viewWinnerModalDialog winnerId

@@ -1,4 +1,11 @@
-module Entrance exposing (Break, Model, Msg(..), init, update, view)
+module Entrance exposing
+    ( Break
+    , Model
+    , Msg(..)
+    , init
+    , update
+    , view
+    )
 
 import Application
 import Html exposing (..)
@@ -75,11 +82,11 @@ view : Model -> Html Msg
 view model =
     {- TODO get rid of defaults -}
     nav [ class "level" ]
-        [ div [ class "level-item has-test-cenered" ]
+        [ div [ class "level-item has-text-centered" ]
             [ breakButton model (Exit (Application.EntranceExit Application.Left (Maybe.withDefault 0 model.runTo))) ]
-        , div [ class "level-item has-test-cenered" ]
+        , div [ class "level-item has-text-centered" ]
             [ runToHtml ]
-        , div [ class "level-item has-test-cenered" ]
+        , div [ class "level-item has-text-centered" ]
             [ breakButton model (Exit (Application.EntranceExit Application.Right (Maybe.withDefault 0 model.runTo))) ]
         , if model.isSettingRunTo then
             viewRunToModalDialog model
