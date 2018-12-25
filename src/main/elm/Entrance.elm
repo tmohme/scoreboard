@@ -1,5 +1,6 @@
 module Entrance exposing (Break, Model, Msg(..), init, update, view)
 
+import Application
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -22,11 +23,10 @@ type alias Model =
 
 
 type Msg
-    = LeftBreak
-    | RightBreak
-    | RunToInput String
+    = RunToInput String
     | SetRunTo
     | ToggleRunTo
+    | Exit Application.Event
 
 
 init : Model
@@ -58,12 +58,6 @@ runToHtml =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        LeftBreak ->
-            { model | break = Left }
-
-        RightBreak ->
-            { model | break = Right }
-
         RunToInput s ->
             { model | runToBuffer = String.toInt s }
 
@@ -73,16 +67,20 @@ update msg model =
         ToggleRunTo ->
             { model | isSettingRunTo = not model.isSettingRunTo }
 
+        Exit event ->
+            model
+
 
 view : Model -> Html Msg
 view model =
+    {- TODO get rid of defaults -}
     nav [ class "level" ]
         [ div [ class "level-item has-test-cenered" ]
-            [ breakButton model LeftBreak ]
+            [ breakButton model (Exit (Application.EntranceExit Application.Left (Maybe.withDefault 0 model.runTo))) ]
         , div [ class "level-item has-test-cenered" ]
             [ runToHtml ]
         , div [ class "level-item has-test-cenered" ]
-            [ breakButton model RightBreak ]
+            [ breakButton model (Exit (Application.EntranceExit Application.Right (Maybe.withDefault 0 model.runTo))) ]
         , if model.isSettingRunTo then
             viewRunToModalDialog model
 

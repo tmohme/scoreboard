@@ -2,6 +2,7 @@ module Main exposing (Model, Msg(..), Page(..), Player, PlayerId(..), ShowWinner
 
 -- import Debug exposing (log)
 
+import Application
 import Browser
 import Entrance
 import Html exposing (..)
@@ -189,25 +190,33 @@ update msg model =
                 updatedEntranceModel =
                     Entrance.update entranceMsg model.entrance
 
-                ( page, shootingPlayer, runTo ) =
+                ( page, shootingPlayer, maybeRunTo ) =
                     case entranceMsg of
-                        Entrance.LeftBreak ->
-                            ( Game, Just model.left, model.runTo )
+                        Entrance.Exit applicationEvent ->
+                            let
+                                ( playerSelection, runTo ) =
+                                    case applicationEvent of
+                                        Application.EntranceExit p r ->
+                                            ( p, r )
 
-                        Entrance.RightBreak ->
-                            ( Game, Just model.right, model.runTo )
+                                player =
+                                    case playerSelection of
+                                        Application.Left ->
+                                            model.left
 
-                        Entrance.SetRunTo ->
-                            ( Entrance, Nothing, Maybe.Extra.or model.runTo updatedEntranceModel.runTo )
+                                        Application.Right ->
+                                            model.right
+                            in
+                            ( Game, Just player, Just runTo )
 
                         _ ->
                             ( Entrance, Nothing, model.runTo )
             in
             ( { model
                 | entrance = updatedEntranceModel
-                , shooting = shootingPlayer
                 , page = page
-                , runTo = runTo
+                , shooting = shootingPlayer
+                , runTo = maybeRunTo
               }
             , Cmd.none
             )
