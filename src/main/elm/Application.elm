@@ -1,10 +1,20 @@
-module Application exposing (Event(..), PlayerSelection(..))
+module Application exposing (Event(..), PlayerId(..), nameOf)
 
 
-type PlayerSelection
+type PlayerId
     = Left
     | Right
 
 
 type Event
-    = EntranceExit PlayerSelection Int
+    = EntranceExit PlayerId Int
+
+
+nameOf : PlayerId -> String
+nameOf playerId =
+    case playerId of
+        Left ->
+            "Left"
+
+        Right ->
+            "Right"

@@ -1,10 +1,11 @@
-module Main exposing (Model, Msg(..), Page(..), Player, PlayerId(..), ShowWinner(..), bulma, calculateCurrentStreak, createPlayer, css, determineShootingNext, determineWinner, init, main, subscriptions, update, updatedPlayer, view, viewBall, viewBody, viewGame, viewHeader, viewPlayer, viewWinnerModalDialog)
+module Main exposing (Model, Msg(..), Page(..), bulma, css, init, main)
 
 -- import Debug exposing (log)
 
 import Application
 import Browser
 import Entrance
+import Game
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -17,180 +18,37 @@ type Page
     | Game
 
 
-type ShowWinner
-    = NotYet
-    | ShowWinner PlayerId
-    | AlreadyShown
-
-
 type Msg
     = EntranceMsg Entrance.Msg
-    | BallsLeftOnTable Int
-    | WinnerShown
+    | GameMsg Game.Msg
 
 
 type alias Model =
     { page : Page
-    , left : Player
-    , right : Player
-    , shooting : Maybe Player
-    , runTo : Maybe Int
-    , ballsLeftOnTable : Int
-    , winner : Maybe Player
-    , showWinner : ShowWinner
     , entrance : Entrance.Model
+    , game : Game.Model
     }
-
-
-type PlayerId
-    = Left
-    | Right
-
-
-nameOf : PlayerId -> String
-nameOf playerId =
-    case playerId of
-        Left ->
-            "Left"
-
-        Right ->
-            "Right"
-
-
-type alias Player =
-    { id : PlayerId
-    , points : Int
-    , innings : Int
-    , currentStreak : Int
-    , longestStreak : Int
-    , pointsAtStreakStart : Int
-    }
-
-
-createPlayer : PlayerId -> Player
-createPlayer id =
-    Player id 0 0 0 0 0
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { page = Entrance
-      , left = createPlayer Left
-      , right = createPlayer Right
-      , shooting = Nothing
-      , runTo = Nothing
-      , ballsLeftOnTable = 15
-      , winner = Nothing
-      , showWinner = NotYet
       , entrance = Entrance.init
+      , game = Game.init
       }
     , Cmd.none
     )
-
-
-calculateCurrentStreak : Int -> Int -> Int -> Int
-calculateCurrentStreak previous increment limit =
-    Basics.min (previous + increment) limit
-
-
-updatedPlayer : Player -> Maybe Player -> Int -> Bool -> Int -> Player
-updatedPlayer player shooting shotBalls playerSwitch runToPoints =
-    case shooting of
-        Just someone ->
-            if someone.id == player.id then
-                -- TODO extract branch
-                let
-                    points =
-                        Basics.min (player.points + shotBalls) runToPoints
-
-                    inningIncrement =
-                        if playerSwitch then
-                            1
-
-                        else
-                            0
-
-                    maxBallsToRun =
-                        runToPoints - player.pointsAtStreakStart
-
-                    currentStreak =
-                        calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
-
-                    longestStreak =
-                        Basics.max player.longestStreak currentStreak
-                in
-                { player
-                    | points = points
-                    , innings = player.innings + inningIncrement
-                    , currentStreak = currentStreak
-                    , longestStreak = longestStreak
-                }
-
-            else
-                { player
-                    | currentStreak = 0
-                    , pointsAtStreakStart = player.points
-                }
-
-        Nothing ->
-            player
-
-
-determineShootingNext : Maybe PlayerId -> Bool -> Player -> Player -> Maybe Player
-determineShootingNext shootingPrevious playerSwitch left right =
-    if playerSwitch then
-        case shootingPrevious of
-            Just id ->
-                if id == left.id then
-                    Just right
-
-                else
-                    Just left
-
-            Nothing ->
-                Nothing
-
-    else
-        case shootingPrevious of
-            Just id ->
-                if id == left.id then
-                    Just left
-
-                else
-                    Just right
-
-            Nothing ->
-                Nothing
-
-
-determineWinner : Maybe Int -> Player -> Player -> Maybe Player
-determineWinner runToPoints left right =
-    case runToPoints of
-        Just points ->
-            if left.points >= points then
-                Just left
-
-            else if right.points >= points then
-                Just right
-
-            else
-                Nothing
-
-        Nothing ->
-            Nothing
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         EntranceMsg entranceMsg ->
-            {- TODO Don't break Entrance's encapsulation -}
-            {- TODO Find a better way to get the "result" -}
             let
                 updatedEntranceModel =
                     Entrance.update entranceMsg model.entrance
 
-                ( page, shootingPlayer, maybeRunTo ) =
+                ( page, maybeBreaker, maybeRunTo ) =
                     case entranceMsg of
                         Entrance.Exit applicationEvent ->
                             let
@@ -198,94 +56,28 @@ update msg model =
                                     case applicationEvent of
                                         Application.EntranceExit p r ->
                                             ( p, r )
-
-                                player =
-                                    case playerSelection of
-                                        Application.Left ->
-                                            model.left
-
-                                        Application.Right ->
-                                            model.right
                             in
-                            ( Game, Just player, Just runTo )
+                            ( Game, Just playerSelection, Just runTo )
 
                         _ ->
-                            ( Entrance, Nothing, model.runTo )
+                            ( Entrance, Nothing, Nothing )
             in
             ( { model
-                | entrance = updatedEntranceModel
-                , page = page
-                , shooting = shootingPlayer
-                , runTo = maybeRunTo
+                | page = page
+                , entrance = updatedEntranceModel
+                , game = Game.start model.game maybeBreaker maybeRunTo
               }
             , Cmd.none
             )
 
-        BallsLeftOnTable n ->
+        GameMsg gameMsg ->
             let
-                shotBalls =
-                    model.ballsLeftOnTable - n
-
-                gameFinished =
-                    case ( model.shooting, model.runTo ) of
-                        ( Just player, Just runToPoints ) ->
-                            (player.points + shotBalls) >= runToPoints
-
-                        ( _, _ ) ->
-                            False
-
-                playerSwitch =
-                    gameFinished || (n > 1) || (model.ballsLeftOnTable == n)
-
-                left =
-                    updatedPlayer model.left model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
-
-                right =
-                    updatedPlayer model.right model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
-
-                ballsOnTable =
-                    if n == 1 then
-                        15
-
-                    else
-                        n
-
-                shootingNext =
-                    determineShootingNext
-                        (model.shooting
-                            |> Maybe.map .id
-                        )
-                        playerSwitch
-                        left
-                        right
-
-                winner =
-                    determineWinner model.runTo left right
-
-                showWinner =
-                    case ( winner, model.showWinner ) of
-                        ( Nothing, _ ) ->
-                            NotYet
-
-                        ( Just player, NotYet ) ->
-                            ShowWinner player.id
-
-                        ( Just player, _ ) ->
-                            AlreadyShown
+                updatedGameModel =
+                    Game.update gameMsg model.game
             in
             ( { model
-                | ballsLeftOnTable = ballsOnTable
-                , left = left
-                , right = right
-                , shooting = shootingNext
-                , winner = winner
-                , showWinner = showWinner
+                | game = updatedGameModel
               }
-            , Cmd.none
-            )
-
-        WinnerShown ->
-            ( { model | showWinner = AlreadyShown }
             , Cmd.none
             )
 
@@ -309,145 +101,6 @@ viewHeader =
         ]
 
 
-viewWinnerModalDialog : PlayerId -> Html Msg
-viewWinnerModalDialog playerId =
-    div [ class "modal is-active", attribute "aria-label" "Modal title" ]
-        [ div [ class "modal-background", onClick WinnerShown ]
-            []
-        , div [ class "modal-card" ]
-            [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = WinnerShown, preventDefault = True, stopPropagation = True }) ]
-                [ Html.header
-                    [ class "modal-card-head" ]
-                    [ p [ class "modal-card-title" ]
-                        [ text "Gewinner" ]
-                    , button [ class "delete", onClick WinnerShown, attribute "aria-label" "close" ]
-                        []
-                    ]
-                , section [ class "modal-card-body" ]
-                    [ div [ class "field" ]
-                        [ label [ class "label" ] [ text "Der Gewinner ist" ]
-                        , text (nameOf playerId)
-                        ]
-                    ]
-                , footer [ class "modal-card-foot" ]
-                    [ button [ type_ "button", class "button is-primary", onClick WinnerShown, attribute "aria-label" "OK" ]
-                        [ text "OK" ]
-                    ]
-                ]
-            ]
-        ]
-
-
-viewPlayer : Player -> Bool -> Html Msg
-viewPlayer player isShooting =
-    let
-        style =
-            case isShooting of
-                True ->
-                    "has-background-primary"
-
-                False ->
-                    ""
-
-        totalAvg =
-            if player.innings > 0 then
-                (round ((toFloat player.points / toFloat player.innings) * 10.0) |> toFloat) / 10.0
-
-            else
-                0.0
-    in
-    div []
-        [ p [ class ("big-auto-size" ++ " " ++ style) ] [ text (player.points |> String.fromInt) ]
-        , div [ class ("level" ++ " " ++ style) ]
-            [ div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "AN" ]
-                , p [ class "title" ] [ text (player.innings |> String.fromInt) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "GD" ]
-                , p [ class "title" ] [ text (totalAvg |> String.fromFloat) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "HA" ]
-                , p [ class "title" ] [ text (player.longestStreak |> String.fromInt) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "Fouls" ]
-                , p [ class "title" ] [ text "?" ]
-                ]
-            ]
-        ]
-
-
-viewBall : Int -> Int -> Html Msg
-viewBall max n =
-    let
-        maybeHidden =
-            if n > max then
-                Html.Attributes.hidden True
-
-            else
-                Html.Attributes.hidden False
-    in
-    div [ maybeHidden ]
-        [ img [ alt (String.fromInt n), src ("img/" ++ String.fromInt n ++ "B.svg"), onClick (BallsLeftOnTable n) ] []
-        ]
-
-
-viewGame : Model -> Html Msg
-viewGame model =
-    let
-        isLeftShooting =
-            model.shooting == Just model.left
-
-        isRightShooting =
-            model.shooting == Just model.right
-
-        max =
-            model.ballsLeftOnTable
-    in
-    div
-        []
-        [ div
-            [ class "columns" ]
-            [ div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
-            , div [ class "column is-one-fifth is-centered  has-text-centered" ]
-                [ button [ class "button", disabled True ] [ text "Vollbild" ]
-                , button [ class "button", disabled True ] [ text "RunTo" ]
-                , button [ class "button", disabled True ] [ text "Pause / Weiter" ]
-                , button [ class "button", disabled True ] [ text "Log / Undo" ]
-                , button [ class "button", disabled True ] [ text "Ende" ]
-                ]
-            , div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
-            ]
-        , footer [ class "footer" ]
-            [ div [ class "container" ]
-                [ viewBall max 1
-                , viewBall max 2
-                , viewBall max 3
-                , viewBall max 4
-                , viewBall max 5
-                , viewBall max 6
-                , viewBall max 7
-                , viewBall max 8
-                , viewBall max 9
-                , viewBall max 10
-                , viewBall max 11
-                , viewBall max 12
-                , viewBall max 13
-                , viewBall max 14
-                , viewBall max 15
-                ]
-            ]
-        , case model.showWinner of
-            ShowWinner winnerId ->
-                viewWinnerModalDialog winnerId
-
-            _ ->
-                text ""
-        ]
-
-
 viewBody : Model -> Html Msg
 viewBody model =
     case model.page of
@@ -455,7 +108,7 @@ viewBody model =
             Html.map EntranceMsg (Entrance.view model.entrance)
 
         Game ->
-            viewGame model
+            Html.map GameMsg (Game.view model.game)
 
 
 view : Model -> Html Msg
