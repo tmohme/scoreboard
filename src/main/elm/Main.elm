@@ -1,8 +1,9 @@
-module Main exposing (Model, Msg(..), Page(..), Player, PlayerId(..), ShowWinner(..), breakButton, bulma, calculateCurrentStreak, canBreak, createPlayer, css, determineShootingNext, determineWinner, init, main, runToHtml, subscriptions, update, updatedPlayer, view, viewBall, viewBody, viewEntrance, viewGame, viewHeader, viewPlayer, viewRunToModalDialog, viewWinnerModalDialog)
+module Main exposing (Model, Msg(..), Page(..), Player, PlayerId(..), ShowWinner(..), bulma, calculateCurrentStreak, createPlayer, css, determineShootingNext, determineWinner, init, main, subscriptions, update, updatedPlayer, view, viewBall, viewBody, viewGame, viewHeader, viewPlayer, viewWinnerModalDialog)
 
 -- import Debug exposing (log)
 
 import Browser
+import Entrance
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -22,26 +23,21 @@ type ShowWinner
 
 
 type Msg
-    = LeftBreak
-    | RightBreak
-    | RunToInput String
-    | SetRunTo
-    | ToggleRunTo
+    = EntranceMsg Entrance.Msg
     | BallsLeftOnTable Int
     | WinnerShown
 
 
 type alias Model =
-    { runTo : Maybe Int
-    , runToBuffer : Maybe Int
-    , isSettingRunTo : Bool
-    , page : Page
+    { page : Page
     , left : Player
     , right : Player
     , shooting : Maybe Player
+    , runTo : Maybe Int
     , ballsLeftOnTable : Int
     , winner : Maybe Player
     , showWinner : ShowWinner
+    , entrance : Entrance.Model
     }
 
 
@@ -77,24 +73,18 @@ createPlayer id =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { runTo = Nothing
-      , runToBuffer = Just 80
-      , isSettingRunTo = False
-      , page = Entrance
+    ( { page = Entrance
       , left = createPlayer Left
       , right = createPlayer Right
       , shooting = Nothing
+      , runTo = Nothing
       , ballsLeftOnTable = 15
       , winner = Nothing
       , showWinner = NotYet
+      , entrance = Entrance.init
       }
     , Cmd.none
     )
-
-
-canBreak : Model -> Bool
-canBreak model =
-    isJust model.runTo
 
 
 calculateCurrentStreak : Int -> Int -> Int -> Int
@@ -192,22 +182,33 @@ determineWinner runToPoints left right =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        LeftBreak ->
-            ( { model | page = Game, shooting = Just model.left }, Cmd.none )
+        EntranceMsg entranceMsg ->
+            {- TODO Don't break Entrance's encapsulation -}
+            {- TODO Find a better way to get the "result" -}
+            let
+                updatedEntranceModel =
+                    Entrance.update entranceMsg model.entrance
 
-        RightBreak ->
-            ( { model | page = Game, shooting = Just model.right }, Cmd.none )
+                ( page, shootingPlayer, runTo ) =
+                    case entranceMsg of
+                        Entrance.LeftBreak ->
+                            ( Game, Just model.left, model.runTo )
 
-        RunToInput s ->
-            ( { model | runToBuffer = String.toInt s }, Cmd.none )
+                        Entrance.RightBreak ->
+                            ( Game, Just model.right, model.runTo )
 
-        SetRunTo ->
-            ( { model | isSettingRunTo = False, runTo = model.runToBuffer }
-            , Cmd.none
-            )
+                        Entrance.SetRunTo ->
+                            ( Entrance, Nothing, Maybe.Extra.or model.runTo updatedEntranceModel.runTo )
 
-        ToggleRunTo ->
-            ( { model | isSettingRunTo = not model.isSettingRunTo }
+                        _ ->
+                            ( Entrance, Nothing, model.runTo )
+            in
+            ( { model
+                | entrance = updatedEntranceModel
+                , shooting = shootingPlayer
+                , page = page
+                , runTo = runTo
+              }
             , Cmd.none
             )
 
@@ -263,14 +264,15 @@ update msg model =
                         ( Just player, _ ) ->
                             AlreadyShown
             in
-            ({ model
+            ( { model
                 | ballsLeftOnTable = ballsOnTable
                 , left = left
                 , right = right
                 , shooting = shootingNext
                 , winner = winner
                 , showWinner = showWinner
-            }, Cmd.none
+              }
+            , Cmd.none
             )
 
         WinnerShown ->
@@ -295,51 +297,6 @@ viewHeader =
         [ div [ class "level-item" ] [ text "left" ]
         , div [ class "level-item" ] [ text "14-1 Scoreboard" ]
         , div [ class "level-item" ] [ text "right" ]
-        ]
-
-
-breakButton : Model -> Msg -> Html Msg
-breakButton model msg =
-    button [ type_ "button", class "button", disabled (not (canBreak model)), onClick msg ]
-        [ text "Break?" ]
-
-
-runToHtml : Html Msg
-runToHtml =
-    button [ onClick ToggleRunTo, class "button" ]
-        [ text "run to ..." ]
-
-
-viewRunToModalDialog : Model -> Html Msg
-viewRunToModalDialog model =
-    let
-        runToValue =
-            Maybe.map (\v -> String.fromInt v) model.runToBuffer |> Maybe.withDefault ""
-    in
-    div [ class "modal is-active", attribute "aria-label" "Modal title" ]
-        [ div [ class "modal-background", onClick ToggleRunTo ]
-            []
-        , div [ class "modal-card" ]
-            [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = SetRunTo, preventDefault = True, stopPropagation = True }) ]
-                [ Html.header
-                    [ class "modal-card-head" ]
-                    [ p [ class "modal-card-title" ]
-                        [ text "Spielziel" ]
-                    , button [ class "delete", onClick ToggleRunTo, attribute "aria-label" "close" ]
-                        []
-                    ]
-                , section [ class "modal-card-body" ]
-                    [ div [ class "field" ]
-                        [ label [ class "label" ] [ text "Gib dein Spielziel ein (z.B. 125):" ]
-                        , input [ type_ "number", class "input", value runToValue, step "5", onInput RunToInput ] []
-                        ]
-                    ]
-                , footer [ class "modal-card-foot" ]
-                    [ button [ type_ "button", class "button is-primary", onClick SetRunTo, attribute "aria-label" "OK" ]
-                        [ text "OK" ]
-                    ]
-                ]
-            ]
         ]
 
 
@@ -369,23 +326,6 @@ viewWinnerModalDialog playerId =
                     ]
                 ]
             ]
-        ]
-
-
-viewEntrance : Model -> Html Msg
-viewEntrance model =
-    nav [ class "level" ]
-        [ div [ class "level-item has-test-cenered" ]
-            [ breakButton model LeftBreak ]
-        , div [ class "level-item has-test-cenered" ]
-            [ runToHtml ]
-        , div [ class "level-item has-test-cenered" ]
-            [ breakButton model RightBreak ]
-        , if model.isSettingRunTo then
-            viewRunToModalDialog model
-
-          else
-            text ""
         ]
 
 
@@ -503,7 +443,7 @@ viewBody : Model -> Html Msg
 viewBody model =
     case model.page of
         Entrance ->
-            viewEntrance model
+            Html.map EntranceMsg (Entrance.view model.entrance)
 
         Game ->
             viewGame model
