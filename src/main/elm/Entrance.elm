@@ -23,43 +23,42 @@ type Break
 
 type alias Model =
     { break : Break
-    , runTo : Maybe Int
+    , runTo : Int
     , runToBuffer : Maybe Int
-    , isSettingRunTo : Bool
+    , runToModalVisible : Bool
     }
 
 
 type Msg
     = RunToInput String
     | SetRunTo
-    | ToggleRunTo
+    | ToggleRunToModal
     | Exit Application.Event
+
+
+defaultTarget =
+    80
 
 
 init : Model
 init =
     { break = Undefined
-    , runTo = Nothing
-    , runToBuffer = Just 80
-    , isSettingRunTo = False
+    , runTo = defaultTarget
+    , runToBuffer = Just defaultTarget
+    , runToModalVisible = False
     }
-
-
-canBreak : Model -> Bool
-canBreak model =
-    isJust model.runTo
 
 
 breakButton : Model -> Msg -> Html Msg
 breakButton model msg =
-    button [ type_ "button", class "button", disabled (not (canBreak model)), onClick msg ]
+    button [ type_ "button", class "button", onClick msg ]
         [ text "Break?" ]
 
 
-runToHtml : Html Msg
-runToHtml =
-    button [ onClick ToggleRunTo, class "button" ]
-        [ text "run to ..." ]
+runToButton : Model -> Html Msg
+runToButton model =
+    button [ onClick ToggleRunToModal, class "button" ]
+        [ text <| "run to ... (" ++ String.fromInt model.runTo ++ ")" ]
 
 
 update : Msg -> Model -> Model
@@ -69,10 +68,10 @@ update msg model =
             { model | runToBuffer = String.toInt s }
 
         SetRunTo ->
-            { model | isSettingRunTo = False, runTo = model.runToBuffer }
+            { model | runToModalVisible = False, runTo = Maybe.withDefault model.runTo model.runToBuffer }
 
-        ToggleRunTo ->
-            { model | isSettingRunTo = not model.isSettingRunTo }
+        ToggleRunToModal ->
+            { model | runToModalVisible = not model.runToModalVisible }
 
         Exit event ->
             model
@@ -80,30 +79,35 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    {- TODO get rid of defaults -}
-    nav [ class "level" ]
-        [ div [ class "level-item has-text-centered" ]
-            [ breakButton model (Exit (Application.EntranceExit Application.Left (Maybe.withDefault 0 model.runTo))) ]
-        , div [ class "level-item has-text-centered" ]
-            [ runToHtml ]
-        , div [ class "level-item has-text-centered" ]
-            [ breakButton model (Exit (Application.EntranceExit Application.Right (Maybe.withDefault 0 model.runTo))) ]
-        , if model.isSettingRunTo then
-            viewRunToModalDialog model
-
-          else
-            text ""
+    div []
+        [ div [ class "level" ]
+            [ div [ class "level-item has-text-centered" ]
+                [ breakButton model (Exit (Application.EntranceExit Application.Left model.runTo)) ]
+            , div [ class "level-item has-text-centered" ]
+                [ runToButton model ]
+            , div [ class "level-item has-text-centered" ]
+                [ breakButton model (Exit (Application.EntranceExit Application.Right model.runTo)) ]
+            ]
+        , viewRunToModal model
         ]
 
 
-viewRunToModalDialog : Model -> Html Msg
-viewRunToModalDialog model =
+viewRunToModal : Model -> Html Msg
+viewRunToModal model =
     let
         runToValue =
             Maybe.map (\v -> String.fromInt v) model.runToBuffer |> Maybe.withDefault ""
+
+        isActive =
+            case model.runToModalVisible of
+                True ->
+                    " is-active"
+
+                False ->
+                    ""
     in
-    div [ class "modal is-active", attribute "aria-label" "Modal title" ]
-        [ div [ class "modal-background", onClick ToggleRunTo ]
+    div [ class ("modal" ++ isActive), attribute "aria-label" "Modal title" ]
+        [ div [ class "modal-background", onClick ToggleRunToModal ]
             []
         , div [ class "modal-card" ]
             [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = SetRunTo, preventDefault = True, stopPropagation = True }) ]
@@ -111,7 +115,7 @@ viewRunToModalDialog model =
                     [ class "modal-card-head" ]
                     [ p [ class "modal-card-title" ]
                         [ text "Spielziel" ]
-                    , button [ class "delete", onClick ToggleRunTo, attribute "aria-label" "close" ]
+                    , button [ class "delete", onClick ToggleRunToModal, attribute "aria-label" "close" ]
                         []
                     ]
                 , section [ class "modal-card-body" ]
