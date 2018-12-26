@@ -125,42 +125,24 @@ suite =
         --
         , describe "determine shooting next"
             [ fuzz3
-                (intRange 0 1)
+                playerId
                 leftPlayer
                 rightPlayer
                 "is always 'shootingPreviously' when no switch"
               <|
-                \n left right ->
-                    let
-                        shootingPreviously =
-                            case n of
-                                0 ->
-                                    left.id
-
-                                _ ->
-                                    right.id
-                    in
+                \shootingPreviously left right ->
                     determineShootingNext shootingPreviously False left right
                         |> .id
                         |> Expect.equal shootingPreviously
 
             --
             , fuzz3
-                bool
+                playerId
                 leftPlayer
                 rightPlayer
                 "is never 'shootingPreviously' when switching from a player"
               <|
-                \bool left right ->
-                    let
-                        shootingPreviously =
-                            case bool of
-                                True ->
-                                    left.id
-
-                                False ->
-                                    right.id
-                    in
+                \shootingPreviously left right ->
                     determineShootingNext shootingPreviously True left right
                         |> .id
                         |> Expect.notEqual shootingPreviously
