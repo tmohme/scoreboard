@@ -7,7 +7,6 @@ module Game exposing
     , determineShootingNext
     , determineWinner
     , init
-    , start
     , update
     , updatedPlayer
     , view
@@ -38,9 +37,9 @@ type Msg
 type alias Model =
     { left : Player
     , right : Player
-    , shooting : Maybe Player
+    , shooting : Player
     , ballsLeftOnTable : Int
-    , runTo : Maybe Int
+    , runTo : Int
     , winner : Maybe Player
     , showWinner : ShowWinner
     }
@@ -56,34 +55,32 @@ fullRack =
     15
 
 
-init : Model
-init =
-    { left = createPlayer App.Left
-    , right = createPlayer App.Right
-    , shooting = Nothing
+mapToPlayer : App.PlayerId -> Player -> Player -> Player
+mapToPlayer playerId left right =
+    case playerId of
+        App.Left ->
+            left
+
+        App.Right ->
+            right
+
+
+init : App.GameConfig -> Model
+init config =
+    let
+        left =
+            createPlayer App.Left
+
+        right =
+            createPlayer App.Right
+    in
+    { left = left
+    , right = right
+    , shooting = mapToPlayer config.playerId left right
     , ballsLeftOnTable = fullRack
-    , runTo = Nothing
+    , runTo = config.runTo
     , winner = Nothing
     , showWinner = NotYet
-    }
-
-
-start : Model -> Maybe App.PlayerId -> Maybe Int -> Model
-start model breaker runToPoints =
-    { model
-        | shooting =
-            case breaker of
-                Just playerId ->
-                    case playerId of
-                        App.Left ->
-                            Just model.left
-
-                        App.Right ->
-                            Just model.right
-
-                Nothing ->
-                    Nothing
-        , runTo = runToPoints
     }
 
 
@@ -97,91 +94,70 @@ calculateCurrentStreak previous increment limit =
     Basics.min (previous + increment) limit
 
 
-updatedPlayer : Player -> Maybe Player -> Int -> Bool -> Int -> Player
+updatedPlayer : Player -> Player -> Int -> Bool -> Int -> Player
 updatedPlayer player shooting shotBalls playerSwitch runToPoints =
-    case shooting of
-        Just someone ->
-            if someone.id == player.id then
-                -- TODO extract branch
-                let
-                    points =
-                        Basics.min (player.points + shotBalls) runToPoints
+    if shooting.id == player.id then
+        -- TODO extract branch
+        let
+            points =
+                Basics.min (player.points + shotBalls) runToPoints
 
-                    inningIncrement =
-                        if playerSwitch then
-                            1
-
-                        else
-                            0
-
-                    maxBallsToRun =
-                        runToPoints - player.pointsAtStreakStart
-
-                    currentStreak =
-                        calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
-
-                    longestStreak =
-                        Basics.max player.longestStreak currentStreak
-                in
-                { player
-                    | points = points
-                    , innings = player.innings + inningIncrement
-                    , currentStreak = currentStreak
-                    , longestStreak = longestStreak
-                }
-
-            else
-                { player
-                    | currentStreak = 0
-                    , pointsAtStreakStart = player.points
-                }
-
-        Nothing ->
-            player
-
-
-determineShootingNext : Maybe App.PlayerId -> Bool -> Player -> Player -> Maybe Player
-determineShootingNext shootingPrevious playerSwitch left right =
-    if playerSwitch then
-        case shootingPrevious of
-            Just id ->
-                if id == left.id then
-                    Just right
+            inningIncrement =
+                if playerSwitch then
+                    1
 
                 else
-                    Just left
+                    0
 
-            Nothing ->
-                Nothing
+            maxBallsToRun =
+                runToPoints - player.pointsAtStreakStart
+
+            currentStreak =
+                calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
+
+            longestStreak =
+                Basics.max player.longestStreak currentStreak
+        in
+        { player
+            | points = points
+            , innings = player.innings + inningIncrement
+            , currentStreak = currentStreak
+            , longestStreak = longestStreak
+        }
 
     else
-        case shootingPrevious of
-            Just id ->
-                if id == left.id then
-                    Just left
-
-                else
-                    Just right
-
-            Nothing ->
-                Nothing
+        { player
+            | currentStreak = 0
+            , pointsAtStreakStart = player.points
+        }
 
 
-determineWinner : Maybe Int -> Player -> Player -> Maybe Player
+determineShootingNext : App.PlayerId -> Bool -> Player -> Player -> Player
+determineShootingNext shootingPrevious playerSwitch left right =
+    if playerSwitch then
+        if shootingPrevious == left.id then
+            right
+
+        else
+            left
+
+    else if shootingPrevious == left.id then
+        left
+
+    else
+        right
+
+
+determineWinner : Int -> Player -> Player -> Maybe Player
 determineWinner runToPoints left right =
-    case runToPoints of
-        Just points ->
-            if left.points >= points then
-                Just left
+    if left.points >= runToPoints then
+        Just left
 
-            else if right.points >= points then
-                Just right
+    else if right.points >= runToPoints then
+        Just right
 
-            else
-                Nothing
-
-        Nothing ->
-            Nothing
+    else
+        Nothing
 
 
 update : Msg -> Model -> Model
@@ -193,21 +169,16 @@ update msg model =
                     model.ballsLeftOnTable - n
 
                 gameFinished =
-                    case ( model.shooting, model.runTo ) of
-                        ( Just player, Just runToPoints ) ->
-                            (player.points + shotBalls) >= runToPoints
-
-                        ( _, _ ) ->
-                            False
+                    (model.shooting.points + shotBalls) >= model.runTo
 
                 playerSwitch =
                     gameFinished || (n > 1) || (model.ballsLeftOnTable == n)
 
                 left =
-                    updatedPlayer model.left model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
+                    updatedPlayer model.left model.shooting shotBalls playerSwitch model.runTo
 
                 right =
-                    updatedPlayer model.right model.shooting shotBalls playerSwitch (model.runTo |> Maybe.withDefault 0)
+                    updatedPlayer model.right model.shooting shotBalls playerSwitch model.runTo
 
                 ballsOnTable =
                     if n == 1 then
@@ -218,9 +189,7 @@ update msg model =
 
                 shootingNext =
                     determineShootingNext
-                        (model.shooting
-                            |> Maybe.map .id
-                        )
+                        model.shooting.id
                         playerSwitch
                         left
                         right
@@ -301,7 +270,7 @@ viewBall max n =
                 " is-invisible"
 
             else
-                Html.Attributes.hidden False
+                ""
     in
     button [ class <| "button tile" ++ visibility ]
         [ img
@@ -346,10 +315,10 @@ view : Model -> Html Msg
 view model =
     let
         isLeftShooting =
-            model.shooting == Just model.left
+            model.shooting == model.left
 
         isRightShooting =
-            model.shooting == Just model.right
+            model.shooting == model.right
 
         max =
             model.ballsLeftOnTable

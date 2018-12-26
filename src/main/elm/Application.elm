@@ -1,4 +1,4 @@
-module Application exposing (Event(..), PlayerId(..), nameOf)
+module Application exposing (Event(..), GameConfig, PlayerId(..), nameOf)
 
 
 type PlayerId
@@ -6,8 +6,12 @@ type PlayerId
     | Right
 
 
+type alias GameConfig =
+    { playerId : PlayerId, runTo : Int }
+
+
 type Event
-    = EntranceExit PlayerId Int
+    = EntranceExit GameConfig
 
 
 nameOf : PlayerId -> String

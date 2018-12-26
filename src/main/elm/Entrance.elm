@@ -7,7 +7,7 @@ module Entrance exposing
     , view
     )
 
-import Application
+import Application as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -33,7 +33,7 @@ type Msg
     = RunToInput String
     | SetRunTo
     | ToggleRunToModal
-    | Exit Application.Event
+    | Exit App.Event
 
 
 defaultTarget =
@@ -82,11 +82,11 @@ view model =
     div []
         [ div [ class "level" ]
             [ div [ class "level-item has-text-centered" ]
-                [ breakButton model (Exit (Application.EntranceExit Application.Left model.runTo)) ]
+                [ breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)) ]
             , div [ class "level-item has-text-centered" ]
                 [ runToButton model ]
             , div [ class "level-item has-text-centered" ]
-                [ breakButton model (Exit (Application.EntranceExit Application.Right model.runTo)) ]
+                [ breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)) ]
             ]
         , viewRunToModal model
         ]

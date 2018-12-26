@@ -26,7 +26,7 @@ type Msg
 type alias Model =
     { page : Page
     , entrance : Entrance.Model
-    , game : Game.Model
+    , game : Maybe Game.Model
     }
 
 
@@ -34,7 +34,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { page = Entrance
       , entrance = Entrance.init
-      , game = Game.init
+      , game = Nothing
       }
     , Cmd.none
     )
@@ -48,24 +48,18 @@ update msg model =
                 updatedEntranceModel =
                     Entrance.update entranceMsg model.entrance
 
-                ( page, maybeBreaker, maybeRunTo ) =
+                ( page, mayBeGame ) =
                     case entranceMsg of
-                        Entrance.Exit applicationEvent ->
-                            let
-                                ( playerSelection, runTo ) =
-                                    case applicationEvent of
-                                        Application.EntranceExit p r ->
-                                            ( p, r )
-                            in
-                            ( Game, Just playerSelection, Just runTo )
+                        Entrance.Exit (Application.EntranceExit gameConfig) ->
+                            ( Game, Just <| Game.init gameConfig )
 
                         _ ->
-                            ( Entrance, Nothing, Nothing )
+                            ( Entrance, Nothing )
             in
             ( { model
                 | page = page
                 , entrance = updatedEntranceModel
-                , game = Game.start model.game maybeBreaker maybeRunTo
+                , game = mayBeGame
               }
             , Cmd.none
             )
@@ -73,7 +67,12 @@ update msg model =
         GameMsg gameMsg ->
             let
                 updatedGameModel =
-                    Game.update gameMsg model.game
+                    case model.game of
+                        Just aGame ->
+                            Just <| Game.update gameMsg aGame
+
+                        Nothing ->
+                            Nothing
             in
             ( { model
                 | game = updatedGameModel
@@ -108,7 +107,12 @@ viewBody model =
             Html.map EntranceMsg (Entrance.view model.entrance)
 
         Game ->
-            Html.map GameMsg (Game.view model.game)
+            case model.game of
+                Just aGame ->
+                    Html.map GameMsg (Game.view aGame)
+
+                Nothing ->
+                    div [] []
 
 
 view : Model -> Html Msg
