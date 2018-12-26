@@ -258,7 +258,7 @@ viewPlayer player isShooting =
         style =
             case isShooting of
                 True ->
-                    "has-background-primary"
+                    " has-background-primary"
 
                 False ->
                     ""
@@ -271,8 +271,8 @@ viewPlayer player isShooting =
                 0.0
     in
     div []
-        [ p [ class ("big-auto-size" ++ " " ++ style) ] [ text (player.points |> String.fromInt) ]
-        , div [ class ("level" ++ " " ++ style) ]
+        [ p [ class <| "big-auto-size" ++ style ] [ text (player.points |> String.fromInt) ]
+        , div [ class <| "level" ++ style ]
             [ div [ class "level-item has-text-centered" ]
                 [ p [ class "heading" ] [ text "AN" ]
                 , p [ class "title" ] [ text (player.innings |> String.fromInt) ]
@@ -303,8 +303,13 @@ viewBall max n =
             else
                 Html.Attributes.hidden False
     in
-    button [ class ("button tile" ++ visibility) ]
-        [ img [ alt (String.fromInt n), src ("img/" ++ String.fromInt n ++ "B.svg"), onClick (BallsLeftOnTable n) ] []
+    button [ class <| "button tile" ++ visibility ]
+        [ img
+            [ alt (String.fromInt n)
+            , src <| "img/" ++ String.fromInt n ++ "B.svg"
+            , onClick (BallsLeftOnTable n)
+            ]
+            []
         ]
 
 

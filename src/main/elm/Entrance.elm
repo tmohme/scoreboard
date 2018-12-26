@@ -106,7 +106,7 @@ viewRunToModal model =
                 False ->
                     ""
     in
-    div [ class ("modal" ++ isActive), attribute "aria-label" "Modal title" ]
+    div [ class <| "modal" ++ isActive, attribute "aria-label" "Modal title" ]
         [ div [ class "modal-background", onClick ToggleRunToModal ]
             []
         , div [ class "modal-card" ]
