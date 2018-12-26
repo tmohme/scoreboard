@@ -296,14 +296,14 @@ viewPlayer player isShooting =
 viewBall : Int -> Int -> Html Msg
 viewBall max n =
     let
-        maybeHidden =
+        visibility =
             if n > max then
-                Html.Attributes.hidden True
+                " is-invisible"
 
             else
                 Html.Attributes.hidden False
     in
-    button [ maybeHidden, class "button tile" ]
+    button [ class ("button tile" ++ visibility) ]
         [ img [ alt (String.fromInt n), src ("img/" ++ String.fromInt n ++ "B.svg"), onClick (BallsLeftOnTable n) ] []
         ]
 
