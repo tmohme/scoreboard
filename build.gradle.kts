@@ -3,7 +3,7 @@ import org.mohme.gradle.ElmPluginExtension
 
 plugins {
   base
-  id("org.mohme.gradle.elm-plugin" ) version "3.0.0"
+  id("org.mohme.gradle.elm-plugin" ) version "3.1.0"
 }
 
 group = "org.mohme"
@@ -17,7 +17,7 @@ elm {
 }
 
 tasks {
-  named("clean", Delete::class) {
+  clean.configure {
     delete("${rootDir}/elm-stuff")
   }
 
@@ -28,7 +28,6 @@ tasks {
     into("${buildDir}")
   }
 
-  named("assemble") {
-    dependsOn("elmMake", copy)
-  }
+  assemble.get().dependsOn(elmMake, copy)
+  check.get().dependsOn(elmTest)
 }
