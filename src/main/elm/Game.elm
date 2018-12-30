@@ -1,14 +1,11 @@
 module Game exposing
     ( Model
     , Msg(..)
-    , Player
-    , calculateCurrentStreak
     , createPlayer
     , determineShootingNext
     , determineWinner
     , init
     , update
-    , updatedPlayer
     , view
     )
 
@@ -17,16 +14,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
-
-
-type alias Player =
-    { id : App.PlayerId
-    , points : Int
-    , innings : Int
-    , currentStreak : Int
-    , longestStreak : Int
-    , pointsAtStreakStart : Int
-    }
+import Player exposing (Player, view)
 
 
 type Msg
@@ -89,49 +77,6 @@ createPlayer id =
     Player id 0 0 0 0 0
 
 
-calculateCurrentStreak : Int -> Int -> Int -> Int
-calculateCurrentStreak previous increment limit =
-    Basics.min (previous + increment) limit
-
-
-updatedPlayer : Player -> Player -> Int -> Bool -> Int -> Player
-updatedPlayer player shooting shotBalls playerSwitch runToPoints =
-    if shooting.id == player.id then
-        -- TODO extract branch
-        let
-            points =
-                Basics.min (player.points + shotBalls) runToPoints
-
-            inningIncrement =
-                if playerSwitch then
-                    1
-
-                else
-                    0
-
-            maxBallsToRun =
-                runToPoints - player.pointsAtStreakStart
-
-            currentStreak =
-                calculateCurrentStreak player.currentStreak shotBalls maxBallsToRun
-
-            longestStreak =
-                Basics.max player.longestStreak currentStreak
-        in
-        { player
-            | points = points
-            , innings = player.innings + inningIncrement
-            , currentStreak = currentStreak
-            , longestStreak = longestStreak
-        }
-
-    else
-        { player
-            | currentStreak = 0
-            , pointsAtStreakStart = player.points
-        }
-
-
 determineShootingNext : App.PlayerId -> Bool -> Player -> Player -> Player
 determineShootingNext shootingPrevious playerSwitch left right =
     if playerSwitch then
@@ -175,10 +120,10 @@ update msg model =
                     gameFinished || (n > 1) || (model.ballsLeftOnTable == n)
 
                 left =
-                    updatedPlayer model.left model.shooting shotBalls playerSwitch model.runTo
+                    Player.update model.left model.shooting shotBalls playerSwitch model.runTo
 
                 right =
-                    updatedPlayer model.right model.shooting shotBalls playerSwitch model.runTo
+                    Player.update model.right model.shooting shotBalls playerSwitch model.runTo
 
                 ballsOnTable =
                     if n == 1 then
@@ -219,47 +164,6 @@ update msg model =
 
         WinnerShown ->
             { model | showWinner = AlreadyShown }
-
-
-viewPlayer : Player -> Bool -> Html Msg
-viewPlayer player isShooting =
-    let
-        style =
-            case isShooting of
-                True ->
-                    " has-background-primary"
-
-                False ->
-                    ""
-
-        totalAvg =
-            if player.innings > 0 then
-                (round ((toFloat player.points / toFloat player.innings) * 10.0) |> toFloat) / 10.0
-
-            else
-                0.0
-    in
-    div []
-        [ p [ class <| "big-auto-size" ++ style ] [ text (player.points |> String.fromInt) ]
-        , div [ class <| "level" ++ style ]
-            [ div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "AN" ]
-                , p [ class "title" ] [ text (player.innings |> String.fromInt) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "GD" ]
-                , p [ class "title" ] [ text (totalAvg |> String.fromFloat) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "HA" ]
-                , p [ class "title" ] [ text (player.longestStreak |> String.fromInt) ]
-                ]
-            , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "Fouls" ]
-                , p [ class "title" ] [ text "?" ]
-                ]
-            ]
-        ]
 
 
 viewBall : Int -> Int -> Html Msg
@@ -327,7 +231,8 @@ view model =
         []
         [ div
             [ class "columns" ]
-            [ div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.left isLeftShooting ]
+            [ div [ class "column is-two-fifth is-centered has-text-centered" ]
+                [ Player.view model.left isLeftShooting ]
             , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
                 [ button [ class "button tile", disabled True ] [ text "Vollbild" ]
                 , button [ class "button tile", disabled True ] [ text "RunTo" ]
@@ -335,7 +240,8 @@ view model =
                 , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
                 , button [ class "button tile", disabled True ] [ text "Ende" ]
                 ]
-            , div [ class "column is-two-fifth is-centered has-text-centered" ] [ viewPlayer model.right isRightShooting ]
+            , div [ class "column is-two-fifth is-centered has-text-centered" ]
+                [ Player.view model.right isRightShooting ]
             ]
         , div
             [ class "tile is-ancestor" ]
