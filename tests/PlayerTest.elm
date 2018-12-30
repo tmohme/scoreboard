@@ -159,17 +159,15 @@ suite =
                         |> Expect.equal runTo
 
             --
-            , fuzz3
-                player
-                int
+            , fuzz2
+                (tuple3 (player, int, bool))
                 (intRange 1 150)
                 "has shooting player's innings incremented after a switch"
               <|
-                \aPlayer shotBalls runTo ->
+                \(aPlayer, shotBalls, withFoul) runTo ->
                     let
                         switch =
-                            -- TODO fuzz me
-                            Yes False
+                            Yes withFoul
                     in
                     (Player.update aPlayer aPlayer shotBalls switch runTo).innings
                         |> Expect.equal (aPlayer.innings + 1)

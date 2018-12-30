@@ -88,17 +88,15 @@ suite =
                         |> Expect.equal shootingPreviously
 
             --
-            , fuzz3
-                AS.playerId
-                leftPlayer
-                rightPlayer
+            , fuzz2
+                (tuple3 (AS.playerId, leftPlayer, rightPlayer))
+                bool
                 "is never 'shootingPreviously' when switching from a player"
               <|
-                \shootingPreviously left right ->
+                \(shootingPreviously, left, right) withFoul ->
                     let
                         playerSwitch =
-                            -- TODO fuzz me
-                            Player.Yes False
+                            Player.Yes withFoul
                     in
                     Game.determineShootingNext shootingPreviously playerSwitch left right
                         |> .id
