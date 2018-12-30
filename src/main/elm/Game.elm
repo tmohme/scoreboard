@@ -121,6 +121,7 @@ update msg model =
                         No
 
                 left =
+                    -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
                     Player.update model.left model.shooting shotBalls playerSwitch model.runTo
 
                 right =

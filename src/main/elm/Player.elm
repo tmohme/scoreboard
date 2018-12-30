@@ -33,6 +33,7 @@ calculateCurrentStreak previous increment limit =
 
 update : Player -> Player -> Int -> PlayerSwitch -> Int -> Player
 update player shooting shotBalls playerSwitch runToPoints =
+    -- TODO Introduce concept of "shootingPlayer" (Player+Bool)!?
     if shooting.id == player.id then
         -- TODO extract branch
         let
@@ -43,6 +44,18 @@ update player shooting shotBalls playerSwitch runToPoints =
                 case playerSwitch of
                     Yes _ ->
                         1
+
+                    No ->
+                        0
+
+            fouls =
+                case playerSwitch of
+                    Yes withFoul ->
+                        if withFoul then
+                            player.previousFouls + 1
+
+                        else
+                            0
 
                     No ->
                         0
@@ -59,6 +72,7 @@ update player shooting shotBalls playerSwitch runToPoints =
         { player
             | points = points
             , innings = player.innings + inningIncrement
+            , previousFouls = fouls
             , currentStreak = currentStreak
             , longestStreak = longestStreak
         }

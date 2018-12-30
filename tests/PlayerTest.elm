@@ -107,7 +107,7 @@ suite =
                 player
                 (tuple3 ( player, int, playerSwitch ))
                 (intRange 1 150)
-                "is always the same player when someone was shooting"
+                "is always the same player indepedent of who was shooting"
               <|
                 \aPlayer ( shooting, shotBalls, switch ) runTo ->
                     (Player.update aPlayer shooting shotBalls switch runTo).id
@@ -118,7 +118,7 @@ suite =
                 player
                 int
                 playerSwitch
-                "has shooting player's points incremented when not yet won"
+                "has his points incremented when not yet won"
               <|
                 \aPlayer shotBalls switch ->
                     let
@@ -133,7 +133,7 @@ suite =
                 player
                 int
                 playerSwitch
-                "has shooting player's points incremented when exactly won"
+                "has his points incremented when exactly won"
               <|
                 \aPlayer shotBalls switch ->
                     let
@@ -148,7 +148,7 @@ suite =
                 player
                 (intRange 2 10)
                 playerSwitch
-                "has shooting player's points limited incremented when overshot"
+                "has his points limited incremented when overshot"
               <|
                 \aPlayer shotBalls switch ->
                     let
@@ -160,17 +160,47 @@ suite =
 
             --
             , fuzz2
-                (tuple3 (player, int, bool))
+                (tuple3 ( player, int, bool ))
                 (intRange 1 150)
-                "has shooting player's innings incremented after a switch"
+                "has his innings incremented after a switch"
               <|
-                \(aPlayer, shotBalls, withFoul) runTo ->
+                \( aPlayer, shotBalls, withFoul ) runTo ->
                     let
                         switch =
                             Yes withFoul
                     in
                     (Player.update aPlayer aPlayer shotBalls switch runTo).innings
                         |> Expect.equal (aPlayer.innings + 1)
+
+            --
+            , fuzz3
+                player
+                int
+                (intRange 1 150)
+                "has his previous fouls reset when switched without foul"
+              <|
+                \aPlayer shotBalls runTo ->
+                    let
+                        switch =
+                            Yes False
+                    in
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
+                        |> Expect.equal 0
+
+            --
+            , fuzz3
+                player
+                int
+                (intRange 1 150)
+                "has his previous fouls incremented when switched with foul"
+              <|
+                \aPlayer shotBalls runTo ->
+                    let
+                        switch =
+                            Yes True
+                    in
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
+                        |> Expect.equal (aPlayer.previousFouls + 1)
 
             --
             , fuzz2
