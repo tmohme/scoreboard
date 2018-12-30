@@ -12,12 +12,13 @@ type alias Player =
     , currentStreak : Int
     , longestStreak : Int
     , pointsAtStreakStart : Int
+    , previousFouls : Int
     }
 
 
 create : App.PlayerId -> Player
 create id =
-    Player id 0 0 0 0 0
+    Player id 0 0 0 0 0 0
 
 
 calculateCurrentStreak : Int -> Int -> Int -> Int

@@ -40,7 +40,7 @@ maybePlayer =
 
 suite : Test
 suite =
-    describe "Player"
+    describe "A Player"
         [ describe "calculateCurrentStreak"
             [ fuzz2
                 (intRange 0 10)
@@ -97,7 +97,7 @@ suite =
             ]
 
         --
-        , describe "updatedPlayer"
+        , describe "when updated"
             [ fuzz3
                 player
                 (tuple3 ( player, int, bool ))
@@ -207,7 +207,9 @@ suite =
                             aPlayer.currentStreak
 
                         runTo =
-                            aPlayer.points + aPlayer.currentStreak + shotBalls
+                            aPlayer.points
+                                + aPlayer.currentStreak
+                                + shotBalls
                     in
                     (Player.update aPlayer aPlayer shotBalls False runTo).currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)

@@ -25,9 +25,21 @@ playerId =
 
 leftPlayerGen : Generator P.Player
 leftPlayerGen =
-    Random.map5 (P.Player App.Left) (Random.int 0 31) (Random.int 0 31) (Random.int 0 7) (Random.int 0 15) (Random.constant 0)
+    Random.map (P.Player App.Left)
+        (Random.int 0 31)
+        |> andMap (Random.int 0 31)
+        |> andMap (Random.int 0 7)
+        |> andMap (Random.int 0 15)
+        |> andMap (Random.constant 0)
+        |> andMap (Random.int 0 2)
 
 
 rightPlayerGen : Generator P.Player
 rightPlayerGen =
-    Random.map5 (P.Player App.Right) (Random.int 0 31) (Random.int 0 31) (Random.int 0 7) (Random.int 0 15) (Random.constant 0)
+    Random.map (P.Player App.Right)
+        (Random.int 0 31)
+        |> andMap (Random.int 0 31)
+        |> andMap (Random.int 0 7)
+        |> andMap (Random.int 0 15)
+        |> andMap (Random.constant 0)
+        |> andMap (Random.int 0 2)

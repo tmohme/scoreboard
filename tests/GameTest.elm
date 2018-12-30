@@ -5,7 +5,7 @@ import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
 import Game
-import Player exposing (Player)
+import Player
 import PlayerSupport as PS
 import Random exposing (Generator, map)
 import Random.Extra exposing (andMap)
@@ -13,22 +13,22 @@ import Shrink exposing (Shrinker)
 import Test exposing (..)
 
 
-leftPlayer : Fuzzer Player
+leftPlayer : Fuzzer Player.Player
 leftPlayer =
     Fuzz.custom AS.leftPlayerGen PS.playerShrinker
 
 
-rightPlayer : Fuzzer Player
+rightPlayer : Fuzzer Player.Player
 rightPlayer =
     Fuzz.custom AS.rightPlayerGen PS.playerShrinker
 
 
-player : Fuzzer Player
+player : Fuzzer Player.Player
 player =
     Fuzz.custom PS.playerGen PS.playerShrinker
 
 
-maybePlayer : Fuzzer (Maybe Player)
+maybePlayer : Fuzzer (Maybe Player.Player)
 maybePlayer =
     let
         generator =

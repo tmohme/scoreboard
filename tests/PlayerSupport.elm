@@ -17,6 +17,7 @@ playerGen =
         |> andMap (Random.int 0 7)
         |> andMap (Random.int 0 15)
         |> andMap (Random.constant 0)
+        |> andMap (Random.int 0 2)
 
 
 playerShrinker : Shrinker P.Player
@@ -24,8 +25,8 @@ playerShrinker aPlayer =
     Shrink.noShrink aPlayer
 
 
-validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int -> P.Player
-validPlayer pid points innings currentStreak longestStreak pointsAtStreakStart =
+validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int -> Int -> P.Player
+validPlayer pid points innings currentStreak longestStreak pointsAtStreakStart prevFouls =
     let
         vCurrentStreak =
             Basics.min points currentStreak
@@ -36,4 +37,4 @@ validPlayer pid points innings currentStreak longestStreak pointsAtStreakStart =
         vPointsAtStreakStart =
             points - vCurrentStreak
     in
-    P.Player pid points innings vCurrentStreak vLongestStreak vPointsAtStreakStart
+    P.Player pid points innings vCurrentStreak vLongestStreak vPointsAtStreakStart prevFouls
