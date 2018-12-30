@@ -1,52 +1,42 @@
-module GameTest exposing (leftPlayer, leftPlayerGen, maybePlayer, player, rightPlayer, rightPlayerGen, suite)
+module GameTest exposing (leftPlayer, maybePlayer, player, rightPlayer, suite)
 
 import Application as App
-import ApplicationSupport as AppSupport
+import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
 import Game exposing (..)
 import Main
 import Player exposing (Player)
-import PlayerSupport
+import PlayerSupport as PS
 import Random exposing (Generator, map)
 import Random.Extra exposing (andMap)
 import Shrink exposing (Shrinker)
 import Test exposing (..)
 
 
-leftPlayerGen : Generator Player
-leftPlayerGen =
-    Random.map5 (Player App.Left) (Random.int 0 31) (Random.int 0 31) (Random.int 0 7) (Random.int 0 15) (Random.constant 0)
-
-
-rightPlayerGen : Generator Player
-rightPlayerGen =
-    Random.map5 (Player App.Right) (Random.int 0 31) (Random.int 0 31) (Random.int 0 7) (Random.int 0 15) (Random.constant 0)
-
-
 leftPlayer : Fuzzer Player
 leftPlayer =
-    Fuzz.custom leftPlayerGen PlayerSupport.playerShrinker
+    Fuzz.custom AS.leftPlayerGen PS.playerShrinker
 
 
 rightPlayer : Fuzzer Player
 rightPlayer =
-    Fuzz.custom rightPlayerGen PlayerSupport.playerShrinker
+    Fuzz.custom AS.rightPlayerGen PS.playerShrinker
 
 
 player : Fuzzer Player
 player =
-    Fuzz.custom PlayerSupport.playerGen PlayerSupport.playerShrinker
+    Fuzz.custom PS.playerGen PS.playerShrinker
 
 
 maybePlayer : Fuzzer (Maybe Player)
 maybePlayer =
     let
         generator =
-            Random.Extra.maybe Random.Extra.bool PlayerSupport.playerGen
+            Random.Extra.maybe Random.Extra.bool PS.playerGen
 
         shrinker aMaybePlayer =
-            Shrink.maybe PlayerSupport.playerShrinker aMaybePlayer
+            Shrink.maybe PS.playerShrinker aMaybePlayer
     in
     Fuzz.custom generator shrinker
 
@@ -84,7 +74,7 @@ suite =
         --
         , describe "determine shooting next"
             [ fuzz3
-                AppSupport.playerId
+                AS.playerId
                 leftPlayer
                 rightPlayer
                 "is always 'shootingPreviously' when no switch"
@@ -96,7 +86,7 @@ suite =
 
             --
             , fuzz3
-                AppSupport.playerId
+                AS.playerId
                 leftPlayer
                 rightPlayer
                 "is never 'shootingPreviously' when switching from a player"
