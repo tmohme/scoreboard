@@ -4,8 +4,7 @@ import Application as App
 import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
-import Game exposing (..)
-import Main
+import Game
 import Player exposing (Player)
 import PlayerSupport as PS
 import Random exposing (Generator, map)
@@ -67,7 +66,7 @@ suite =
                         toPoints =
                             max (lPoints + 1) (rPoints + 1)
                     in
-                    determineWinner toPoints left right
+                    Game.determineWinner toPoints left right
                         |> Expect.equal Nothing
             ]
 
@@ -80,7 +79,7 @@ suite =
                 "is always 'shootingPreviously' when no switch"
               <|
                 \shootingPreviously left right ->
-                    determineShootingNext shootingPreviously False left right
+                    Game.determineShootingNext shootingPreviously False left right
                         |> .id
                         |> Expect.equal shootingPreviously
 
@@ -92,7 +91,7 @@ suite =
                 "is never 'shootingPreviously' when switching from a player"
               <|
                 \shootingPreviously left right ->
-                    determineShootingNext shootingPreviously True left right
+                    Game.determineShootingNext shootingPreviously True left right
                         |> .id
                         |> Expect.notEqual shootingPreviously
             ]

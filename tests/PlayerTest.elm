@@ -1,11 +1,8 @@
 module PlayerTest exposing (leftPlayer, maybePlayer, player, rightPlayer, suite)
 
-import Application as App
 import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
-import Game exposing (..)
-import Main
 import Player exposing (Player)
 import PlayerSupport as PS
 import Random exposing (Generator, map)
