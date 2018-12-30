@@ -1,7 +1,6 @@
 module Game exposing
     ( Model
     , Msg(..)
-    , createPlayer
     , determineShootingNext
     , determineWinner
     , init
@@ -57,10 +56,10 @@ init : App.GameConfig -> Model
 init config =
     let
         left =
-            createPlayer App.Left
+            Player.create App.Left
 
         right =
-            createPlayer App.Right
+            Player.create App.Right
     in
     { left = left
     , right = right
@@ -70,11 +69,6 @@ init config =
     , winner = Nothing
     , showWinner = NotYet
     }
-
-
-createPlayer : App.PlayerId -> Player
-createPlayer id =
-    Player id 0 0 0 0 0
 
 
 determineShootingNext : App.PlayerId -> Bool -> Player -> Player -> Player

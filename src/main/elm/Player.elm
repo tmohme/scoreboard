@@ -1,4 +1,4 @@
-module Player exposing (Player, calculateCurrentStreak, update, view)
+module Player exposing (Player, calculateCurrentStreak, create, update, view)
 
 import Application as App
 import Html exposing (..)
@@ -13,6 +13,11 @@ type alias Player =
     , longestStreak : Int
     , pointsAtStreakStart : Int
     }
+
+
+create : App.PlayerId -> Player
+create id =
+    Player id 0 0 0 0 0
 
 
 calculateCurrentStreak : Int -> Int -> Int -> Int
