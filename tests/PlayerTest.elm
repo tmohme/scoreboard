@@ -3,7 +3,7 @@ module PlayerTest exposing (leftPlayer, maybePlayer, player, rightPlayer, suite)
 import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
-import Player exposing (Player)
+import Player exposing (Player, PlayerSwitch(..))
 import PlayerSupport as PS
 import Random exposing (Generator, map)
 import Random.Extra exposing (andMap)
@@ -36,6 +36,11 @@ maybePlayer =
             Shrink.maybe PS.playerShrinker aMaybePlayer
     in
     Fuzz.custom generator shrinker
+
+
+playerSwitch : Fuzzer PlayerSwitch
+playerSwitch =
+    Fuzz.custom PS.playerSwitchGen PS.playerSwitchShrinker
 
 
 suite : Test
@@ -100,57 +105,57 @@ suite =
         , describe "when updated"
             [ fuzz3
                 player
-                (tuple3 ( player, int, bool ))
+                (tuple3 ( player, int, playerSwitch ))
                 (intRange 1 150)
                 "is always the same player when someone was shooting"
               <|
-                \aPlayer ( shooting, shotBalls, switchPlayer ) runTo ->
-                    (Player.update aPlayer shooting shotBalls switchPlayer runTo).id
+                \aPlayer ( shooting, shotBalls, switch ) runTo ->
+                    (Player.update aPlayer shooting shotBalls switch runTo).id
                         |> Expect.equal aPlayer.id
 
             --
             , fuzz3
                 player
                 int
-                bool
+                playerSwitch
                 "has shooting player's points incremented when not yet won"
               <|
-                \aPlayer shotBalls switchPlayer ->
+                \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls + 1
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
                 player
                 int
-                bool
+                playerSwitch
                 "has shooting player's points incremented when exactly won"
               <|
-                \aPlayer shotBalls switchPlayer ->
+                \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
                 player
                 (intRange 2 10)
-                bool
+                playerSwitch
                 "has shooting player's points limited incremented when overshot"
               <|
-                \aPlayer shotBalls switchPlayer ->
+                \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls - 1
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
                         |> Expect.equal runTo
 
             --
@@ -161,21 +166,26 @@ suite =
                 "has shooting player's innings incremented after a switch"
               <|
                 \aPlayer shotBalls runTo ->
-                    (Player.update aPlayer aPlayer shotBalls True runTo).innings
+                    let
+                        switch =
+                            -- TODO fuzz me
+                            Yes False
+                    in
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).innings
                         |> Expect.equal (aPlayer.innings + 1)
 
             --
             , fuzz2
-                (tuple3 ( player, int, bool ))
+                (tuple3 ( player, int, playerSwitch ))
                 (intRange 1 150)
                 "strictly monotonically increments longestStreak"
               <|
-                \( aPlayer, shotBalls, switchPlayer ) runTo ->
+                \( aPlayer, shotBalls, switch ) runTo ->
                     let
                         prevLongestStreak =
                             aPlayer.longestStreak
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).longestStreak
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).longestStreak
                         |> Expect.atLeast prevLongestStreak
 
             --
@@ -191,8 +201,12 @@ suite =
 
                         runTo =
                             aPlayer.points + aPlayer.currentStreak + shotBalls + 1
+
+                        switch =
+                            -- TODO fuzz me
+                            No
                     in
-                    (Player.update aPlayer aPlayer shotBalls False runTo).currentStreak
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
@@ -210,8 +224,11 @@ suite =
                             aPlayer.points
                                 + aPlayer.currentStreak
                                 + shotBalls
+
+                        switch =
+                            No
                     in
-                    (Player.update aPlayer aPlayer shotBalls False runTo).currentStreak
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
@@ -222,7 +239,12 @@ suite =
                 "resets currentStreak after switchPlayer"
               <|
                 \( left, right ) shotBalls runTo ->
-                    (Player.update left right shotBalls True runTo).currentStreak
+                    let
+                        switch =
+                            -- TODO fuzz me
+                            Yes False
+                    in
+                    (Player.update left right shotBalls switch runTo).currentStreak
                         |> Expect.equal 0
             ]
         ]

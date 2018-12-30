@@ -79,7 +79,11 @@ suite =
                 "is always 'shootingPreviously' when no switch"
               <|
                 \shootingPreviously left right ->
-                    Game.determineShootingNext shootingPreviously False left right
+                    let
+                        playerSwitch =
+                            Player.No
+                    in
+                    Game.determineShootingNext shootingPreviously playerSwitch left right
                         |> .id
                         |> Expect.equal shootingPreviously
 
@@ -91,7 +95,12 @@ suite =
                 "is never 'shootingPreviously' when switching from a player"
               <|
                 \shootingPreviously left right ->
-                    Game.determineShootingNext shootingPreviously True left right
+                    let
+                        playerSwitch =
+                            -- TODO fuzz me
+                            Player.Yes False
+                    in
+                    Game.determineShootingNext shootingPreviously playerSwitch left right
                         |> .id
                         |> Expect.notEqual shootingPreviously
             ]

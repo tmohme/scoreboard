@@ -1,8 +1,13 @@
-module Player exposing (Player, calculateCurrentStreak, create, update, view)
+module Player exposing (Player, PlayerSwitch(..), calculateCurrentStreak, create, update, view)
 
 import Application as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
+
+
+type PlayerSwitch
+    = No
+    | Yes Bool -- indicate with foul or not
 
 
 type alias Player =
@@ -26,7 +31,7 @@ calculateCurrentStreak previous increment limit =
     Basics.min (previous + increment) limit
 
 
-update : Player -> Player -> Int -> Bool -> Int -> Player
+update : Player -> Player -> Int -> PlayerSwitch -> Int -> Player
 update player shooting shotBalls playerSwitch runToPoints =
     if shooting.id == player.id then
         -- TODO extract branch
@@ -35,11 +40,12 @@ update player shooting shotBalls playerSwitch runToPoints =
                 Basics.min (player.points + shotBalls) runToPoints
 
             inningIncrement =
-                if playerSwitch then
-                    1
+                case playerSwitch of
+                    Yes _ ->
+                        1
 
-                else
-                    0
+                    No ->
+                        0
 
             maxBallsToRun =
                 runToPoints - player.pointsAtStreakStart

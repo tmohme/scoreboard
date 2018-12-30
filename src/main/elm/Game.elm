@@ -13,7 +13,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
-import Player exposing (Player, view)
+import Player exposing (Player, PlayerSwitch(..), view)
 
 
 type Msg
@@ -71,20 +71,22 @@ init config =
     }
 
 
-determineShootingNext : App.PlayerId -> Bool -> Player -> Player -> Player
+determineShootingNext : App.PlayerId -> PlayerSwitch -> Player -> Player -> Player
 determineShootingNext shootingPrevious playerSwitch left right =
-    if playerSwitch then
-        if shootingPrevious == left.id then
-            right
+    case playerSwitch of
+        Yes _ ->
+            if shootingPrevious == left.id then
+                right
 
-        else
-            left
+            else
+                left
 
-    else if shootingPrevious == left.id then
-        left
+        No ->
+            if shootingPrevious == left.id then
+                left
 
-    else
-        right
+            else
+                right
 
 
 determineWinner : Int -> Player -> Player -> Maybe Player
@@ -111,7 +113,12 @@ update msg model =
                     (model.shooting.points + shotBalls) >= model.runTo
 
                 playerSwitch =
-                    gameFinished || (n > 1) || (model.ballsLeftOnTable == n)
+                    -- TODO get rid of 'gameFinished'
+                    if gameFinished || (n > 1) || (model.ballsLeftOnTable == n) then
+                        Yes False
+
+                    else
+                        No
 
                 left =
                     Player.update model.left model.shooting shotBalls playerSwitch model.runTo
