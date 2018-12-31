@@ -117,45 +117,69 @@ suite =
             , fuzz3
                 player
                 int
-                playerSwitch
-                "has his points incremented when not yet won"
+                bool
+                "has his points incremented by shotBalls when not yet won (and no foul)"
               <|
                 \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls + 1
+
+                        switchPlayer =
+                            case switch of
+                                True ->
+                                    Player.Yes False
+
+                                False ->
+                                    Player.No
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
                 player
                 int
-                playerSwitch
-                "has his points incremented when exactly won"
+                bool
+                "has his points incremented by shotBalls when exactly won (and no foul)"
               <|
                 \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls
+
+                        switchPlayer =
+                            case switch of
+                                True ->
+                                    Player.Yes False
+
+                                False ->
+                                    Player.No
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
             , fuzz3
                 player
                 (intRange 2 10)
-                playerSwitch
-                "has his points limited incremented when overshot"
+                bool
+                "has his points capped incremented when overshot (and no foul)"
               <|
                 \aPlayer shotBalls switch ->
                     let
                         runTo =
                             aPlayer.points + shotBalls - 1
+
+                        switchPlayer =
+                            case switch of
+                                True ->
+                                    Player.Yes False
+
+                                False ->
+                                    Player.No
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
                         |> Expect.equal runTo
 
             --
@@ -201,6 +225,23 @@ suite =
                     in
                     (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
                         |> Expect.equal (aPlayer.previousFouls + 1)
+
+            --
+            , fuzz2
+                player
+                int
+                "has his points decremented by one for a foul (when not capped by game target)"
+              <|
+                \aPlayer shotBalls ->
+                    let
+                        switch =
+                            Yes True
+
+                        runTo =
+                            aPlayer.points + shotBalls
+                    in
+                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                        |> Expect.equal (aPlayer.points + shotBalls - 1)
 
             --
             , fuzz2

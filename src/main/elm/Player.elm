@@ -50,15 +50,16 @@ update player shooting shotBalls playerSwitch runToPoints =
 
             fouls =
                 case playerSwitch of
-                    Yes withFoul ->
-                        if withFoul then
-                            player.previousFouls + 1
+                    Yes True ->
+                        player.previousFouls + 1
 
-                        else
-                            0
-
-                    No ->
+                    _ ->
                         0
+
+            foulMalus =
+                case playerSwitch of
+                    Yes True -> 1
+                    _ -> 0
 
             maxBallsToRun =
                 runToPoints - player.pointsAtStreakStart
@@ -70,7 +71,7 @@ update player shooting shotBalls playerSwitch runToPoints =
                 Basics.max player.longestStreak currentStreak
         in
         { player
-            | points = points
+            | points = points - foulMalus
             , innings = player.innings + inningIncrement
             , previousFouls = fouls
             , currentStreak = currentStreak
