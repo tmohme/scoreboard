@@ -51,15 +51,25 @@ update player shooting shotBalls playerSwitch runToPoints =
             fouls =
                 case playerSwitch of
                     Yes True ->
-                        player.previousFouls + 1
+                        if player.previousFouls == 2 then
+                            0
+
+                        else
+                            player.previousFouls + 1
 
                     _ ->
                         0
 
             foulMalus =
                 case playerSwitch of
-                    Yes True -> 1
-                    _ -> 0
+                    Yes True ->
+                        if (player.previousFouls == 2) then
+                            (1 + 15)
+                        else
+                            1
+
+                    _ ->
+                        0
 
             maxBallsToRun =
                 runToPoints - player.pointsAtStreakStart
