@@ -40,6 +40,9 @@ update player shooting shotBalls playerSwitch runToPoints =
             points =
                 Basics.min (player.points + shotBalls) runToPoints
 
+            overshot =
+                (player.points + shotBalls) > runToPoints
+
             inningIncrement =
                 case playerSwitch of
                     Yes _ ->
@@ -49,27 +52,36 @@ update player shooting shotBalls playerSwitch runToPoints =
                         0
 
             fouls =
-                case playerSwitch of
-                    Yes True ->
-                        if player.previousFouls == 2 then
+                if overshot then
+                    player.previousFouls
+
+                else
+                    case playerSwitch of
+                        Yes True ->
+                            if player.previousFouls == 2 then
+                                0
+
+                            else
+                                player.previousFouls + 1
+
+                        _ ->
                             0
 
-                        else
-                            player.previousFouls + 1
-
-                    _ ->
-                        0
-
             foulMalus =
-                case playerSwitch of
-                    Yes True ->
-                        if (player.previousFouls == 2) then
-                            (1 + 15)
-                        else
-                            1
+                if overshot then
+                    0
 
-                    _ ->
-                        0
+                else
+                    case playerSwitch of
+                        Yes True ->
+                            if player.previousFouls == 2 then
+                                1 + 15
+
+                            else
+                                1
+
+                        _ ->
+                            0
 
             maxBallsToRun =
                 runToPoints - player.pointsAtStreakStart

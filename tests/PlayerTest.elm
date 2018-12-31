@@ -197,33 +197,59 @@ suite =
                         |> Expect.equal (aPlayer.innings + 1)
 
             --
-            , fuzz3
+            , fuzz2
                 player
                 int
-                (intRange 1 150)
-                "has his previous fouls reset when switched without foul"
+                "has his previous fouls reset when switched without foul (and not overshot)"
               <|
-                \aPlayer shotBalls runTo ->
+                \aPlayer shotBalls ->
                     let
                         switch =
                             Yes False
+
+                        runTo =
+                            aPlayer.points + shotBalls + 1
                     in
                     (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
                         |> Expect.equal 0
 
             --
             , fuzz2
-                (tuple3 ( player, int, intRange 0 1 ))
-                (intRange 1 150)
-                "has his previous fouls incremented when switched with foul (and already has 0 or 1 foul)"
+                player
+                int
+                "has his previous fouls unchanged when overshot (already won)"
               <|
-                \( generatedPlayer, shotBalls, prevFouls ) runTo ->
+                \aPlayer shotBalls ->
+                    let
+                        switch =
+                            Yes True
+
+                        runTo =
+                            aPlayer.points + shotBalls - 1
+
+                        playerWithTwoFouls =
+                            { aPlayer | previousFouls = 2 }
+                    in
+                    (Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo).previousFouls
+                        |> Expect.equal playerWithTwoFouls.previousFouls
+
+            --
+            , fuzz3
+                player
+                int
+                (intRange 0 1)
+                "has his previous fouls incremented when switched with foul (and already has 0 or 1 foul, not overshot)"
+              <|
+                \generatedPlayer shotBalls prevFouls ->
                     let
                         switch =
                             Yes True
 
                         aPlayer =
                             { generatedPlayer | previousFouls = prevFouls }
+
+                        runTo =
+                            aPlayer.points + shotBalls + 1
                     in
                     (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
                         |> Expect.equal (aPlayer.previousFouls + 1)
@@ -288,7 +314,6 @@ suite =
                     (Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo).previousFouls
                         |> Expect.equal 0
 
-            -- TODO Fouls don't count when overshot because the game officially has already ended
             --
             , fuzz2
                 (tuple3 ( player, int, playerSwitch ))
