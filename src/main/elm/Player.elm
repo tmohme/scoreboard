@@ -4,7 +4,11 @@ import Application as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
-type SwitchReason = Miss | Foul
+
+type SwitchReason
+    = Miss
+    | Foul
+
 
 type PlayerSwitch
     = No
@@ -111,13 +115,12 @@ update player shooting shotBalls playerSwitch runToPoints =
 view : Player -> Bool -> Html msg
 view player isShooting =
     let
-        style =
-            case isShooting of
-                True ->
-                    " has-background-primary"
+        shooting =
+            if isShooting then
+                "has-background-primary"
 
-                False ->
-                    ""
+            else
+                ""
 
         totalAvg =
             if player.innings > 0 then
@@ -125,10 +128,16 @@ view player isShooting =
 
             else
                 0.0
+
+        foulWarning =
+            if (player.previousFouls == 2) then
+                "has-text-danger"
+            else
+                ""
     in
     div []
-        [ p [ class <| "big-auto-size" ++ style ] [ text (player.points |> String.fromInt) ]
-        , div [ class <| "level" ++ style ]
+        [ p [ class "big-auto-size", class shooting ] [ text (player.points |> String.fromInt) ]
+        , div [ class "level", class shooting ]
             [ div [ class "level-item has-text-centered" ]
                 [ p [ class "heading" ] [ text "AN" ]
                 , p [ class "title" ] [ text (player.innings |> String.fromInt) ]
@@ -142,8 +151,8 @@ view player isShooting =
                 , p [ class "title" ] [ text (player.longestStreak |> String.fromInt) ]
                 ]
             , div [ class "level-item has-text-centered" ]
-                [ p [ class "heading" ] [ text "Fouls" ]
-                , p [ class "title" ] [ text "?" ]
+                [ p [ class "heading", class foulWarning ] [ text "Fouls" ]
+                , p [ class "title", class foulWarning ] [ text (player.previousFouls |> String.fromInt) ]
                 ]
             ]
         ]

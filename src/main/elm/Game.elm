@@ -18,6 +18,7 @@ import Player exposing (Player, PlayerSwitch(..), SwitchReason(..), view)
 
 type Msg
     = BallsLeftOnTable Int
+    | ToggleSwitchReason
     | WinnerShown
 
 
@@ -29,6 +30,7 @@ type alias Model =
     , runTo : Int
     , winner : Maybe Player
     , showWinner : ShowWinner
+    , switchReason : SwitchReason
     }
 
 
@@ -68,6 +70,7 @@ init config =
     , runTo = config.runTo
     , winner = Nothing
     , showWinner = NotYet
+    , switchReason = Miss
     }
 
 
@@ -104,6 +107,18 @@ determineWinner runToPoints left right =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        ToggleSwitchReason ->
+            let
+                reason =
+                    case model.switchReason of
+                        Miss ->
+                            Foul
+
+                        Foul ->
+                            Miss
+            in
+            { model | switchReason = reason }
+
         BallsLeftOnTable n ->
             let
                 shotBalls =
@@ -115,7 +130,7 @@ update msg model =
                 playerSwitch =
                     -- TODO get rid of 'gameFinished'
                     if gameFinished || (n > 1) || (model.ballsLeftOnTable == n) then
-                        Yes Miss
+                        Yes model.switchReason
 
                     else
                         No
@@ -162,6 +177,7 @@ update msg model =
                 , shooting = shootingNext
                 , winner = winner
                 , showWinner = showWinner
+                , switchReason = Miss
             }
 
         WinnerShown ->
@@ -228,6 +244,13 @@ view model =
 
         max =
             model.ballsLeftOnTable
+
+        latentFoul =
+            if model.switchReason == Foul then
+                "is-warning"
+
+            else
+                ""
     in
     div
         []
@@ -235,7 +258,7 @@ view model =
             [ class "columns" ]
             [ div [ class "column is-two-fifth is-centered has-text-centered" ]
                 [ Player.view model.left isLeftShooting ]
-            , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
+            , nav [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
                 [ button [ class "button tile", disabled True ] [ text "Vollbild" ]
                 , button [ class "button tile", disabled True ] [ text "RunTo" ]
                 , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
@@ -244,6 +267,10 @@ view model =
                 ]
             , div [ class "column is-two-fifth is-centered has-text-centered" ]
                 [ Player.view model.right isRightShooting ]
+            ]
+        , nav [ class "level" ]
+            [ div [ class "level-item" ]
+                [ button [ class "button is-large", class latentFoul, onClick ToggleSwitchReason ] [ text "Foul" ] ]
             ]
         , div
             [ class "tile is-ancestor" ]
