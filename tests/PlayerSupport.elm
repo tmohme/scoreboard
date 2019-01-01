@@ -1,81 +1,85 @@
-module PlayerSupport exposing (playerGen, playerShrinker, playerSwitchGen, playerSwitchShrinker, switchReason)
+module PlayerSupport exposing (leftPlayer, player, playerSwitch, rightPlayer, switchReason)
 
 import Application as App
 import ApplicationSupport as AppSupport
 import Fuzz exposing (Fuzzer)
 import Player as P
-import Random exposing (Generator, map)
-import Random.Extra exposing (andMap, choice)
-import Shrink exposing (Shrinker)
 
-
-bool : Generator Bool
-bool =
-    Random.int 0 1 |> map ((==) 0)
-
-
-switchReasonGen : Generator P.SwitchReason
-switchReasonGen =
-    choice P.Miss P.Foul
-
-switchReasonShrinker : Shrinker P.SwitchReason
-switchReasonShrinker reason =
-    -- TODO implement a real shrinker
-    Shrink.noShrink reason
 
 
 switchReason : Fuzzer P.SwitchReason
 switchReason =
-    Fuzz.custom switchReasonGen switchReasonShrinker
+    Fuzz.oneOf
+        [ Fuzz.constant P.Miss
+        , Fuzz.constant P.Foul
+        ]
 
 
-playerSwitchGen : Generator P.PlayerSwitch
-playerSwitchGen =
-    Random.map2
-        (\switch foul ->
-            if switch then
-                P.Yes foul
-
-            else
-                P.No
-        )
-        bool
-        switchReasonGen
+playerSwitch : Fuzzer P.PlayerSwitch
+playerSwitch =
+    Fuzz.oneOf
+        [ Fuzz.constant P.No
+        , Fuzz.map P.Yes switchReason
+        ]
 
 
-playerSwitchShrinker : Shrinker P.PlayerSwitch
-playerSwitchShrinker switch =
-    -- TODO implement a real shrinker
-    Shrink.noShrink switch
-
-
-playerGen : Generator P.Player
-playerGen =
-    Random.map validPlayer
-        AppSupport.playerIdGen
-        |> andMap (Random.int 0 31)
-        |> andMap (Random.int 0 31)
-        |> andMap (Random.int 0 7)
-        |> andMap (Random.int 0 15)
-        |> andMap (Random.constant 0)
-        |> andMap (Random.int 0 2)
-
-
-playerShrinker : Shrinker P.Player
-playerShrinker aPlayer =
-    Shrink.noShrink aPlayer
-
-
-validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int -> Int -> P.Player
-validPlayer pid points innings currentStreak longestStreak pointsAtStreakStart prevFouls =
+validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int ->  P.Player
+validPlayer pid pointsSoFar inningsSoFar currentStreakSoFar longestStreakSoFar foulsSoFar =
     let
         vCurrentStreak =
-            Basics.min points currentStreak
+            Basics.min pointsSoFar currentStreakSoFar
 
         vLongestStreak =
-            Basics.max currentStreak longestStreak
+            Basics.max currentStreakSoFar longestStreakSoFar
 
         vPointsAtStreakStart =
-            points - vCurrentStreak
+            pointsSoFar - vCurrentStreak
     in
-    P.Player pid points innings vCurrentStreak vLongestStreak vPointsAtStreakStart prevFouls
+    P.Player pid pointsSoFar inningsSoFar vCurrentStreak vLongestStreak vPointsAtStreakStart foulsSoFar
+
+points : Fuzzer Int
+points = Fuzz.intRange 0 31
+
+innings : Fuzzer Int
+innings = Fuzz.intRange 0 31
+
+currentStreak : Fuzzer Int
+currentStreak = Fuzz.intRange 0 7
+
+longestStreak : Fuzzer Int
+longestStreak = Fuzz.intRange 0 15
+
+prevFouls : Fuzzer Int
+prevFouls = Fuzz.intRange 0 2
+
+player : Fuzzer P.Player
+player =
+    Fuzz.map validPlayer
+        AppSupport.playerId
+        |> Fuzz.andMap points
+        |> Fuzz.andMap innings
+        |> Fuzz.andMap currentStreak
+        |> Fuzz.andMap longestStreak
+        |> Fuzz.andMap prevFouls
+
+
+leftPlayer : Fuzzer P.Player
+leftPlayer =
+    Fuzz.map validPlayer
+        (Fuzz.constant App.Left)
+        |> Fuzz.andMap points
+        |> Fuzz.andMap innings
+        |> Fuzz.andMap currentStreak
+        |> Fuzz.andMap longestStreak
+        |> Fuzz.andMap prevFouls
+
+
+rightPlayer : Fuzzer P.Player
+rightPlayer =
+    Fuzz.map validPlayer
+        (Fuzz.constant App.Right)
+        |> Fuzz.andMap points
+        |> Fuzz.andMap innings
+        |> Fuzz.andMap currentStreak
+        |> Fuzz.andMap longestStreak
+        |> Fuzz.andMap prevFouls

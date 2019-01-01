@@ -1,4 +1,4 @@
-module GameTest exposing (leftPlayer, maybePlayer, player, rightPlayer, suite)
+module GameTest exposing (suite)
 
 import Application as App
 import ApplicationSupport as AS
@@ -11,32 +11,6 @@ import Random exposing (Generator, map)
 import Random.Extra exposing (andMap)
 import Shrink exposing (Shrinker)
 import Test exposing (..)
-
-leftPlayer : Fuzzer Player.Player
-leftPlayer =
-    Fuzz.custom AS.leftPlayerGen PS.playerShrinker
-
-
-rightPlayer : Fuzzer Player.Player
-rightPlayer =
-    Fuzz.custom AS.rightPlayerGen PS.playerShrinker
-
-
-player : Fuzzer Player.Player
-player =
-    Fuzz.custom PS.playerGen PS.playerShrinker
-
-
-maybePlayer : Fuzzer (Maybe Player.Player)
-maybePlayer =
-    let
-        generator =
-            Random.Extra.maybe Random.Extra.bool PS.playerGen
-
-        shrinker aMaybePlayer =
-            Shrink.maybe PS.playerShrinker aMaybePlayer
-    in
-    Fuzz.custom generator shrinker
 
 
 suite : Test
@@ -73,8 +47,8 @@ suite =
         , describe "determine shooting next"
             [ fuzz3
                 AS.playerId
-                leftPlayer
-                rightPlayer
+                PS.leftPlayer
+                PS.rightPlayer
                 "is always 'shootingPreviously' when no switch"
               <|
                 \shootingPreviously left right ->
@@ -88,11 +62,11 @@ suite =
 
             --
             , fuzz2
-                (tuple3 (AS.playerId, leftPlayer, rightPlayer))
+                (tuple3 ( AS.playerId, PS.leftPlayer, PS.rightPlayer ))
                 PS.switchReason
                 "is never 'shootingPreviously' when switching from a player"
               <|
-                \(shootingPreviously, left, right) reason ->
+                \( shootingPreviously, left, right ) reason ->
                     let
                         playerSwitch =
                             Player.Yes reason

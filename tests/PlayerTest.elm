@@ -1,46 +1,11 @@
-module PlayerTest exposing (leftPlayer, maybePlayer, player, rightPlayer, suite)
+module PlayerTest exposing (suite)
 
 import ApplicationSupport as AS
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
 import Player exposing (Player, PlayerSwitch(..))
-import PlayerSupport as PS
-import Random exposing (Generator, map)
-import Random.Extra exposing (andMap)
-import Shrink exposing (Shrinker)
+import PlayerSupport exposing (leftPlayer, player, playerSwitch, rightPlayer, switchReason)
 import Test exposing (..)
-
-
-leftPlayer : Fuzzer Player
-leftPlayer =
-    Fuzz.custom AS.leftPlayerGen PS.playerShrinker
-
-
-rightPlayer : Fuzzer Player
-rightPlayer =
-    Fuzz.custom AS.rightPlayerGen PS.playerShrinker
-
-
-player : Fuzzer Player
-player =
-    Fuzz.custom PS.playerGen PS.playerShrinker
-
-
-maybePlayer : Fuzzer (Maybe Player)
-maybePlayer =
-    let
-        generator =
-            Random.Extra.maybe Random.Extra.bool PS.playerGen
-
-        shrinker aMaybePlayer =
-            Shrink.maybe PS.playerShrinker aMaybePlayer
-    in
-    Fuzz.custom generator shrinker
-
-
-playerSwitch : Fuzzer PlayerSwitch
-playerSwitch =
-    Fuzz.custom PS.playerSwitchGen PS.playerSwitchShrinker
 
 
 suite : Test
@@ -184,7 +149,7 @@ suite =
 
             --
             , fuzz2
-                (tuple3 ( player, int, PS.switchReason ))
+                (tuple3 ( player, int, switchReason ))
                 (intRange 1 150)
                 "has his innings incremented after a switch"
               <|
@@ -373,7 +338,7 @@ suite =
 
             --
             , fuzz3
-                (tuple3 ( leftPlayer, rightPlayer, PS.switchReason ))
+                (tuple3 ( leftPlayer, rightPlayer, switchReason ))
                 int
                 (intRange 1 150)
                 "resets currentStreak after switchPlayer"
