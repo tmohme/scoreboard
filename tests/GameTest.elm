@@ -12,7 +12,6 @@ import Random.Extra exposing (andMap)
 import Shrink exposing (Shrinker)
 import Test exposing (..)
 
-
 leftPlayer : Fuzzer Player.Player
 leftPlayer =
     Fuzz.custom AS.leftPlayerGen PS.playerShrinker
@@ -90,13 +89,13 @@ suite =
             --
             , fuzz2
                 (tuple3 (AS.playerId, leftPlayer, rightPlayer))
-                bool
+                PS.switchReason
                 "is never 'shootingPreviously' when switching from a player"
               <|
-                \(shootingPreviously, left, right) withFoul ->
+                \(shootingPreviously, left, right) reason ->
                     let
                         playerSwitch =
-                            Player.Yes withFoul
+                            Player.Yes reason
                     in
                     Game.determineShootingNext shootingPreviously playerSwitch left right
                         |> .id

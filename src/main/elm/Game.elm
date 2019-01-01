@@ -13,7 +13,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
-import Player exposing (Player, PlayerSwitch(..), view)
+import Player exposing (Player, PlayerSwitch(..), SwitchReason(..), view)
 
 
 type Msg
@@ -115,7 +115,7 @@ update msg model =
                 playerSwitch =
                     -- TODO get rid of 'gameFinished'
                     if gameFinished || (n > 1) || (model.ballsLeftOnTable == n) then
-                        Yes False
+                        Yes Miss
 
                     else
                         No

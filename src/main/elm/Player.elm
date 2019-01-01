@@ -1,13 +1,14 @@
-module Player exposing (Player, PlayerSwitch(..), calculateCurrentStreak, create, update, view)
+module Player exposing (Player, PlayerSwitch(..), SwitchReason(..), calculateCurrentStreak, create, update, view)
 
 import Application as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
+type SwitchReason = Miss | Foul
 
 type PlayerSwitch
     = No
-    | Yes Bool -- indicate with foul or not
+    | Yes SwitchReason
 
 
 type alias Player =
@@ -57,7 +58,7 @@ update player shooting shotBalls playerSwitch runToPoints =
 
                 else
                     case playerSwitch of
-                        Yes True ->
+                        Yes Foul ->
                             if player.previousFouls == 2 then
                                 0
 
@@ -73,7 +74,7 @@ update player shooting shotBalls playerSwitch runToPoints =
 
                 else
                     case playerSwitch of
-                        Yes True ->
+                        Yes Foul ->
                             if player.previousFouls == 2 then
                                 1 + 15
 

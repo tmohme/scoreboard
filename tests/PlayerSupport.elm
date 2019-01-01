@@ -1,16 +1,32 @@
-module PlayerSupport exposing (playerGen, playerShrinker, playerSwitchGen, playerSwitchShrinker)
+module PlayerSupport exposing (playerGen, playerShrinker, playerSwitchGen, playerSwitchShrinker, switchReason)
 
 import Application as App
 import ApplicationSupport as AppSupport
+import Fuzz exposing (Fuzzer)
 import Player as P
 import Random exposing (Generator, map)
-import Random.Extra exposing (andMap)
+import Random.Extra exposing (andMap, choice)
 import Shrink exposing (Shrinker)
 
 
 bool : Generator Bool
 bool =
     Random.int 0 1 |> map ((==) 0)
+
+
+switchReasonGen : Generator P.SwitchReason
+switchReasonGen =
+    choice P.Miss P.Foul
+
+switchReasonShrinker : Shrinker P.SwitchReason
+switchReasonShrinker reason =
+    -- TODO implement a real shrinker
+    Shrink.noShrink reason
+
+
+switchReason : Fuzzer P.SwitchReason
+switchReason =
+    Fuzz.custom switchReasonGen switchReasonShrinker
 
 
 playerSwitchGen : Generator P.PlayerSwitch
@@ -24,7 +40,7 @@ playerSwitchGen =
                 P.No
         )
         bool
-        bool
+        switchReasonGen
 
 
 playerSwitchShrinker : Shrinker P.PlayerSwitch

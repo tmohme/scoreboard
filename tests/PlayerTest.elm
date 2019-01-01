@@ -128,7 +128,7 @@ suite =
                         switchPlayer =
                             case switch of
                                 True ->
-                                    Player.Yes False
+                                    Player.Yes Player.Miss
 
                                 False ->
                                     Player.No
@@ -139,7 +139,7 @@ suite =
             --
             , fuzz3
                 player
-                int
+                (intRange 1 150)
                 bool
                 "has his points incremented by shotBalls when exactly won (and no foul)"
               <|
@@ -151,7 +151,7 @@ suite =
                         switchPlayer =
                             case switch of
                                 True ->
-                                    Player.Yes False
+                                    Player.Yes Player.Miss
 
                                 False ->
                                     Player.No
@@ -174,7 +174,7 @@ suite =
                         switchPlayer =
                             case switch of
                                 True ->
-                                    Player.Yes False
+                                    Player.Yes Player.Miss
 
                                 False ->
                                     Player.No
@@ -184,7 +184,7 @@ suite =
 
             --
             , fuzz2
-                (tuple3 ( player, int, bool ))
+                (tuple3 ( player, int, PS.switchReason ))
                 (intRange 1 150)
                 "has his innings incremented after a switch"
               <|
@@ -205,7 +205,7 @@ suite =
                 \aPlayer shotBalls ->
                     let
                         switch =
-                            Yes False
+                            Yes Player.Miss
 
                         runTo =
                             aPlayer.points + shotBalls + 1
@@ -222,7 +222,7 @@ suite =
                 \aPlayer shotBalls ->
                     let
                         switch =
-                            Yes True
+                            Yes Player.Foul
 
                         runTo =
                             aPlayer.points + shotBalls - 1
@@ -243,7 +243,7 @@ suite =
                 \generatedPlayer shotBalls prevFouls ->
                     let
                         switch =
-                            Yes True
+                            Yes Player.Foul
 
                         aPlayer =
                             { generatedPlayer | previousFouls = prevFouls }
@@ -266,7 +266,7 @@ suite =
                             { generatedPlayer | previousFouls = prevFouls }
 
                         switch =
-                            Yes True
+                            Yes Player.Foul
 
                         runTo =
                             aPlayer.points + shotBalls
@@ -286,7 +286,7 @@ suite =
                             { generatedPlayer | previousFouls = 2 }
 
                         switch =
-                            Yes True
+                            Yes Player.Foul
 
                         runTo =
                             aPlayer.points + shotBalls
@@ -303,7 +303,7 @@ suite =
                 \aPlayer shotBalls ->
                     let
                         switch =
-                            Yes True
+                            Yes Player.Foul
 
                         runTo =
                             aPlayer.points + shotBalls
@@ -373,16 +373,15 @@ suite =
 
             --
             , fuzz3
-                (tuple ( leftPlayer, rightPlayer ))
+                (tuple3 ( leftPlayer, rightPlayer, PS.switchReason ))
                 int
                 (intRange 1 150)
                 "resets currentStreak after switchPlayer"
               <|
-                \( left, right ) shotBalls runTo ->
+                \( left, right, reason ) shotBalls runTo ->
                     let
                         switch =
-                            -- TODO fuzz me
-                            Yes False
+                            Yes reason
                     in
                     (Player.update left right shotBalls switch runTo).currentStreak
                         |> Expect.equal 0
