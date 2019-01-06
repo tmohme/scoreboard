@@ -42,6 +42,7 @@ update player shooting shotBalls playerSwitch runToPoints =
     if shooting.id == player.id then
         -- TODO extract branch
         let
+            -- TODO EdgeCase: Foul with potted ball at the same time . . .
             points =
                 Basics.min (player.points + shotBalls) runToPoints
 

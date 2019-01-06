@@ -27,7 +27,7 @@ type alias Model =
     { left : Player
     , right : Player
     , shooting : Player
-    , ballsLeftOnTable : Int
+    , ballsOnTable : Int
     , runTo : Int
     , winner : Maybe Player
     , showWinner : ShowWinner
@@ -67,7 +67,7 @@ init config =
     { left = left
     , right = right
     , shooting = mapToPlayer config.playerId left right
-    , ballsLeftOnTable = fullRack
+    , ballsOnTable = fullRack
     , runTo = config.runTo
     , winner = Nothing
     , showWinner = NotYet
@@ -122,22 +122,23 @@ update msg model =
 
         BallsLeftOnTable remainingBalls ->
             let
+                -- TODO special handling for break fouls
                 shotBalls =
-                    model.ballsLeftOnTable - remainingBalls
+                    model.ballsOnTable - remainingBalls
 
+                -- TODO replace 'gameFinished' flag by an ADT properly modeling the Game state (Break, Running, Finished)
                 gameFinished =
                     (model.shooting.points + shotBalls) >= model.runTo
 
                 playerSwitch =
-                    if (model.switchReason == Foul) then
+                    if model.switchReason == Foul then
                         Yes Foul
-                    else
-                        -- TODO get rid of 'gameFinished'
-                        if gameFinished || (remainingBalls > 1)  ||(model.ballsLeftOnTable == remainingBalls) then
-                            Yes model.switchReason
 
-                        else
-                            No
+                    else if gameFinished || (remainingBalls > 1) || (model.ballsOnTable == remainingBalls) then
+                        Yes model.switchReason
+
+                    else
+                        No
 
                 ( left, leftTripleFoul ) =
                     -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
@@ -146,7 +147,7 @@ update msg model =
                 ( right, rightTripleFoul ) =
                     Player.update model.right model.shooting shotBalls playerSwitch model.runTo
 
-                ballsOnTable =
+                ballsToContinueWith =
                     if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
                         fullRack
 
@@ -175,7 +176,7 @@ update msg model =
                             AlreadyShown
             in
             { model
-                | ballsLeftOnTable = ballsOnTable
+                | ballsOnTable = ballsToContinueWith
                 , left = left
                 , right = right
                 , shooting = shootingNext
@@ -247,7 +248,7 @@ view model =
             model.shooting == model.right
 
         max =
-            model.ballsLeftOnTable
+            model.ballsOnTable
 
         latentFoul =
             if model.switchReason == Foul then

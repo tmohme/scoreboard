@@ -119,7 +119,7 @@ suite =
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
-                        |> .ballsLeftOnTable
+                        |> .ballsOnTable
                         |> Expect.equal Game.fullRack
             ]
         ]
