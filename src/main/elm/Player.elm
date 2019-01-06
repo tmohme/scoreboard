@@ -36,7 +36,7 @@ calculateCurrentStreak previous increment limit =
     Basics.min (previous + increment) limit
 
 
-update : Player -> Player -> Int -> PlayerSwitch -> Int -> Player
+update : Player -> Player -> Int -> PlayerSwitch -> Int -> ( Player, Bool )
 update player shooting shotBalls playerSwitch runToPoints =
     -- TODO Introduce concept of "shootingPlayer" (Player+Bool)!?
     if shooting.id == player.id then
@@ -72,6 +72,14 @@ update player shooting shotBalls playerSwitch runToPoints =
                         _ ->
                             0
 
+            tripleFoulPenalty =
+                case playerSwitch of
+                    Yes Foul ->
+                        player.previousFouls == 2
+
+                    _ ->
+                        False
+
             foulMalus =
                 if overshot then
                     0
@@ -79,7 +87,7 @@ update player shooting shotBalls playerSwitch runToPoints =
                 else
                     case playerSwitch of
                         Yes Foul ->
-                            if player.previousFouls == 2 then
+                            if tripleFoulPenalty then
                                 1 + 15
 
                             else
@@ -97,19 +105,23 @@ update player shooting shotBalls playerSwitch runToPoints =
             longestStreak =
                 Basics.max player.longestStreak currentStreak
         in
-        { player
+        ( { player
             | points = points - foulMalus
             , innings = player.innings + inningIncrement
             , previousFouls = fouls
             , currentStreak = currentStreak
             , longestStreak = longestStreak
-        }
+          }
+        , tripleFoulPenalty
+        )
 
     else
-        { player
+        ( { player
             | currentStreak = 0
             , pointsAtStreakStart = player.points
-        }
+          }
+        , False
+        )
 
 
 view : Player -> Bool -> Html msg
@@ -130,8 +142,9 @@ view player isShooting =
                 0.0
 
         foulWarning =
-            if (player.previousFouls == 2) then
+            if player.previousFouls == 2 then
                 "has-text-danger"
+
             else
                 ""
     in

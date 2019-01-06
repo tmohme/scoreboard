@@ -15,7 +15,7 @@ import Test exposing (..)
 
 suite : Test
 suite =
-    describe "Scoreboard"
+    describe "Multiplayer rules"
         [ describe "No winner"
             [ fuzz2
                 (intRange 0 10)
@@ -74,5 +74,52 @@ suite =
                     Game.determineShootingNext shootingPreviously playerSwitch left right
                         |> .id
                         |> Expect.notEqual shootingPreviously
+            ]
+
+        --
+        , describe "a foul"
+            [ fuzz3
+                PS.leftPlayer
+                PS.rightPlayer
+                (intRange 1 Game.fullRack)
+                "always switches to the other player - regardless of how many balls left on table"
+              <|
+                \leftPlayer rightPlayer ballsOnTable ->
+                    let
+                        game =
+                            -- TODO replace constant
+                            Game.init { playerId = App.Left, runTo = 150 }
+
+                        configuredGame =
+                            { game | left = leftPlayer, right = rightPlayer, switchReason = Player.Foul }
+                    in
+                    configuredGame
+                        |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> .shooting |> .id
+                        |> Expect.equal rightPlayer.id
+
+            --
+            , fuzz3
+                PS.leftPlayer
+                PS.rightPlayer
+                (intRange 1 Game.fullRack)
+                "(if third in a row for a player) leads to a full rack is set-up"
+              <|
+                \leftPlayer rightPlayer ballsOnTable ->
+                    let
+                        foulingPlayer =
+                            { leftPlayer | previousFouls = 2 }
+
+                        game =
+                            -- TODO replace constant
+                            Game.init { playerId = App.Left, runTo = 150 }
+
+                        configuredGame =
+                            { game | left = foulingPlayer, right = rightPlayer, switchReason = Player.Foul }
+                    in
+                    configuredGame
+                        |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> .ballsLeftOnTable
+                        |> Expect.equal Game.fullRack
             ]
         ]

@@ -75,7 +75,11 @@ suite =
                 "is always the same player indepedent of who was shooting"
               <|
                 \aPlayer ( shooting, shotBalls, switch ) runTo ->
-                    (Player.update aPlayer shooting shotBalls switch runTo).id
+                    let
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer shooting shotBalls switch runTo
+                    in
+                    updatedPlayer.id
                         |> Expect.equal aPlayer.id
 
             --
@@ -97,8 +101,11 @@ suite =
 
                                 False ->
                                     Player.No
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switchPlayer runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    updatedPlayer.points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
@@ -120,8 +127,11 @@ suite =
 
                                 False ->
                                     Player.No
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switchPlayer runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    updatedPlayer.points
                         |> Expect.equal (aPlayer.points + shotBalls)
 
             --
@@ -143,8 +153,11 @@ suite =
 
                                 False ->
                                     Player.No
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switchPlayer runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switchPlayer runTo).points
+                    updatedPlayer.points
                         |> Expect.equal runTo
 
             --
@@ -157,8 +170,11 @@ suite =
                     let
                         switch =
                             Yes withFoul
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).innings
+                    updatedPlayer.innings
                         |> Expect.equal (aPlayer.innings + 1)
 
             --
@@ -174,8 +190,11 @@ suite =
 
                         runTo =
                             aPlayer.points + shotBalls + 1
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
+                    updatedPlayer.previousFouls
                         |> Expect.equal 0
 
             --
@@ -194,8 +213,11 @@ suite =
 
                         playerWithTwoFouls =
                             { aPlayer | previousFouls = 2 }
+
+                        ( updatedPLayer, _ ) =
+                            Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo
                     in
-                    (Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo).previousFouls
+                    updatedPLayer.previousFouls
                         |> Expect.equal playerWithTwoFouls.previousFouls
 
             --
@@ -215,8 +237,11 @@ suite =
 
                         runTo =
                             aPlayer.points + shotBalls + 1
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).previousFouls
+                    updatedPlayer.previousFouls
                         |> Expect.equal (aPlayer.previousFouls + 1)
 
             --
@@ -235,8 +260,11 @@ suite =
 
                         runTo =
                             aPlayer.points + shotBalls
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                    updatedPlayer.points
                         |> Expect.equal (aPlayer.points + shotBalls - 1)
 
             --
@@ -255,8 +283,11 @@ suite =
 
                         runTo =
                             aPlayer.points + shotBalls
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).points
+                    updatedPlayer.points
                         |> Expect.equal (aPlayer.points + shotBalls - (1 + 15))
 
             --
@@ -275,8 +306,11 @@ suite =
 
                         playerWithTwoFouls =
                             { aPlayer | previousFouls = 2 }
+
+                        ( updatedPlayer, _ ) =
+                            Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo
                     in
-                    (Player.update playerWithTwoFouls playerWithTwoFouls shotBalls switch runTo).previousFouls
+                    updatedPlayer.previousFouls
                         |> Expect.equal 0
 
             --
@@ -289,8 +323,11 @@ suite =
                     let
                         prevLongestStreak =
                             aPlayer.longestStreak
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).longestStreak
+                    updatedPlayer.longestStreak
                         |> Expect.atLeast prevLongestStreak
 
             --
@@ -310,8 +347,11 @@ suite =
                         switch =
                             -- TODO fuzz me
                             No
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).currentStreak
+                    updatedPlayer.currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
@@ -332,8 +372,11 @@ suite =
 
                         switch =
                             No
+
+                        ( updatedPlayer, _ ) =
+                            Player.update aPlayer aPlayer shotBalls switch runTo
                     in
-                    (Player.update aPlayer aPlayer shotBalls switch runTo).currentStreak
+                    updatedPlayer.currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)
 
             --
@@ -347,8 +390,11 @@ suite =
                     let
                         switch =
                             Yes reason
+
+                        ( updatedPlayer, _ ) =
+                            Player.update left right shotBalls switch runTo
                     in
-                    (Player.update left right shotBalls switch runTo).currentStreak
+                    updatedPlayer.currentStreak
                         |> Expect.equal 0
             ]
         ]

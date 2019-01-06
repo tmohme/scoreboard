@@ -3,6 +3,7 @@ module Game exposing
     , Msg(..)
     , determineShootingNext
     , determineWinner
+    , fullRack
     , init
     , update
     , view
@@ -119,35 +120,38 @@ update msg model =
             in
             { model | switchReason = reason }
 
-        BallsLeftOnTable n ->
+        BallsLeftOnTable remainingBalls ->
             let
                 shotBalls =
-                    model.ballsLeftOnTable - n
+                    model.ballsLeftOnTable - remainingBalls
 
                 gameFinished =
                     (model.shooting.points + shotBalls) >= model.runTo
 
                 playerSwitch =
-                    -- TODO get rid of 'gameFinished'
-                    if gameFinished || (n > 1) || (model.ballsLeftOnTable == n) then
-                        Yes model.switchReason
-
+                    if (model.switchReason == Foul) then
+                        Yes Foul
                     else
-                        No
+                        -- TODO get rid of 'gameFinished'
+                        if gameFinished || (remainingBalls > 1)  ||(model.ballsLeftOnTable == remainingBalls) then
+                            Yes model.switchReason
 
-                left =
+                        else
+                            No
+
+                ( left, leftTripleFoul ) =
                     -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
                     Player.update model.left model.shooting shotBalls playerSwitch model.runTo
 
-                right =
+                ( right, rightTripleFoul ) =
                     Player.update model.right model.shooting shotBalls playerSwitch model.runTo
 
                 ballsOnTable =
-                    if n == 1 then
+                    if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
                         fullRack
 
                     else
-                        n
+                        remainingBalls
 
                 shootingNext =
                     determineShootingNext
