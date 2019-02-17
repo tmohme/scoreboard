@@ -23,7 +23,7 @@ playerSwitch =
         ]
 
 
-validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int ->  P.Player
+validPlayer : App.PlayerId -> Int -> Int -> Int -> Int -> Int -> P.Player
 validPlayer pid pointsSoFar inningsSoFar currentStreakSoFar longestStreakSoFar foulsSoFar =
     let
         vCurrentStreak =
@@ -37,20 +37,31 @@ validPlayer pid pointsSoFar inningsSoFar currentStreakSoFar longestStreakSoFar f
     in
     P.Player pid pointsSoFar inningsSoFar vCurrentStreak vLongestStreak vPointsAtStreakStart foulsSoFar
 
+
 points : Fuzzer Int
-points = Fuzz.intRange 0 31
+points =
+    Fuzz.intRange 0 31
+
 
 innings : Fuzzer Int
-innings = Fuzz.intRange 0 31
+innings =
+    Fuzz.intRange 0 31
+
 
 currentStreak : Fuzzer Int
-currentStreak = Fuzz.intRange 0 7
+currentStreak =
+    Fuzz.intRange 0 7
+
 
 longestStreak : Fuzzer Int
-longestStreak = Fuzz.intRange 0 15
+longestStreak =
+    Fuzz.intRange 0 15
+
 
 prevFouls : Fuzzer Int
-prevFouls = Fuzz.intRange 0 2
+prevFouls =
+    Fuzz.intRange 0 2
+
 
 player : Fuzzer P.Player
 player =
