@@ -1,9 +1,6 @@
-import org.mohme.gradle.ElmMakeTask
-import org.mohme.gradle.ElmPluginExtension
-
 plugins {
   base
-  id("org.mohme.gradle.elm-plugin" ) version "3.1.0"
+  id("org.mohme.gradle.elm-plugin" ) version "3.2.2"
 }
 
 group = "org.mohme"
@@ -21,7 +18,7 @@ tasks {
     delete("${rootDir}/elm-stuff")
   }
 
-  val copy = create("copy", Copy::class) {
+  val copy = register<Copy>("copy") {
     group = "build"
     description = "Copy resources."
     from("src/main/resources")
