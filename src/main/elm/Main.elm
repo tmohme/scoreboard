@@ -88,7 +88,7 @@ css path =
 
 bulma : Html msg
 bulma =
-    css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css"
+    css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"
 
 
 viewHeader : Html Msg
