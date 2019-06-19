@@ -91,15 +91,6 @@ bulma =
     css "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"
 
 
-viewHeader : Html Msg
-viewHeader =
-    nav [ class "level" ]
-        [ div [ class "level-item" ] [ text "left" ]
-        , div [ class "level-item" ] [ text "14-1 Scoreboard" ]
-        , div [ class "level-item" ] [ text "right" ]
-        ]
-
-
 viewBody : Model -> Html Msg
 viewBody model =
     case model.page of
@@ -119,7 +110,6 @@ view : Model -> Html Msg
 view model =
     div []
         [ bulma
-        , viewHeader
         , viewBody model
         ]
 

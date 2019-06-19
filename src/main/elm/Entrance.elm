@@ -77,16 +77,28 @@ update msg model =
             model
 
 
+container : Html Msg -> Html Msg
+container content =
+    div [ class ".container" ] [ content ]
+
+
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "level" ]
-            [ div [ class "level-item has-text-centered" ]
-                [ breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)) ]
-            , div [ class "level-item has-text-centered" ]
-                [ runToButton model ]
-            , div [ class "level-item has-text-centered" ]
-                [ breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)) ]
+        [ div [ class "columns" ]
+            [ div [ class "column has-text-centered" ]
+                -- TODO get text from players
+                [ container (text "left")
+                , container (breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)))
+                ]
+            , div [ class "column has-text-centered" ]
+                [ container (text "14-1 Scoreboard")
+                , container (runToButton model)
+                ]
+            , div [ class "column has-text-centered" ]
+                [ container (text "right")
+                , container (breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)))
+                ]
             ]
         , viewRunToModal model
         ]

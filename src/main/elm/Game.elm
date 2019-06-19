@@ -238,6 +238,11 @@ viewWinnerModalDialog playerId =
         ]
 
 
+container : Html Msg -> Html Msg
+container content =
+    div [ class ".container" ] [ content ]
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -257,21 +262,28 @@ view model =
             else
                 ""
     in
+    -- TODO do we really need div-div?
     div
         []
         [ div
             [ class "columns" ]
             [ div [ class "column is-two-fifth is-centered has-text-centered" ]
-                [ Player.view model.left isLeftShooting ]
-            , nav [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
-                [ button [ class "button tile", disabled True ] [ text "Vollbild" ]
-                , button [ class "button tile", disabled True ] [ text "RunTo" ]
-                , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
-                , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
-                , button [ class "button tile", disabled True ] [ text "Ende" ]
+                -- TODO get text from players
+                [ container (text "left")
+                , container (Player.view model.left isLeftShooting)
+                ]
+            , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
+                [ container (text "14-1 Scoreboard")
+                , container (button [ class "button tile", disabled True ] [ text "Vollbild" ])
+                , container (button [ class "button tile", disabled True ] [ text "RunTo" ])
+                , container (button [ class "button tile", disabled True ] [ text "Pause / Weiter" ])
+                , container (button [ class "button tile", disabled True ] [ text "Log / Undo" ])
+                , container (button [ class "button tile", disabled True ] [ text "Ende" ])
                 ]
             , div [ class "column is-two-fifth is-centered has-text-centered" ]
-                [ Player.view model.right isRightShooting ]
+                [ container (text "right")
+                , container (Player.view model.right isRightShooting)
+                ]
             ]
         , nav [ class "level" ]
             [ div [ class "level-item" ]
