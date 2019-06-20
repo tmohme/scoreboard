@@ -88,6 +88,7 @@ view model =
         [ div [ class "columns" ]
             [ div [ class "column has-text-centered" ]
                 -- TODO get text from players
+                -- TODO make it a button that enables name editing
                 [ container (text "left")
                 , container (breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)))
                 ]
