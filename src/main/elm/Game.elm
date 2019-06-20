@@ -14,7 +14,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
-import Player exposing (Player, PlayerSwitch(..), SwitchReason(..), view)
+import Player exposing (Player, PlayerSwitch(..), SwitchReason(..))
 
 
 type Msg
@@ -172,7 +172,7 @@ update msg model =
                         ( Just player, NotYet ) ->
                             ShowWinner player.id
 
-                        ( Just player, _ ) ->
+                        ( Just _, _ ) ->
                             AlreadyShown
             in
             { model
@@ -185,6 +185,7 @@ update msg model =
                 , switchReason = Miss
             }
 
+        -- TODO game continues after winner has been shown
         WinnerShown ->
             { model | showWinner = AlreadyShown }
 

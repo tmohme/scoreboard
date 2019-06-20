@@ -8,9 +8,6 @@ import Entrance
 import Game
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Json.Decode
-import Maybe.Extra exposing (..)
 
 
 type Page

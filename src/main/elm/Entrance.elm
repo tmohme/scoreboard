@@ -12,13 +12,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
-import Maybe.Extra exposing (isJust)
 
 
 type Break
     = Undefined
-    | Left
-    | Right
 
 
 type alias Model =
@@ -49,8 +46,8 @@ init =
     }
 
 
-breakButton : Model -> Msg -> Html Msg
-breakButton model msg =
+breakButton : Msg -> Html Msg
+breakButton msg =
     button [ type_ "button", class "button", onClick msg ]
         [ text "Break?" ]
 
@@ -73,7 +70,7 @@ update msg model =
         ToggleRunToModal ->
             { model | runToModalVisible = not model.runToModalVisible }
 
-        Exit event ->
+        Exit _ ->
             model
 
 
@@ -90,15 +87,21 @@ view model =
                 -- TODO get text from players
                 -- TODO make it a button that enables name editing
                 [ container (text "left")
-                , container (breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)))
+
+                -- TODO questionable switch from Entrance to App
+                , container (breakButton (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)))
                 ]
             , div [ class "column has-text-centered" ]
                 [ container (text "14-1 Scoreboard")
                 , container (runToButton model)
                 ]
             , div [ class "column has-text-centered" ]
+                -- TODO get text from players
+                -- TODO make it a button that enables name editing
                 [ container (text "right")
-                , container (breakButton model (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)))
+
+                -- TODO questionable switch from Entrance to App
+                , container (breakButton (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)))
                 ]
             ]
         , viewRunToModal model
