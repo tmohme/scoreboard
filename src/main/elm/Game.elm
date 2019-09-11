@@ -275,7 +275,6 @@ view model =
                 ]
             , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
                 [ container (text "14-1 Scoreboard")
-                , container (button [ class "button tile", disabled True ] [ text "Vollbild" ])
                 , container (button [ class "button tile", disabled True ] [ text "RunTo" ])
                 , container (button [ class "button tile", disabled True ] [ text "Pause / Weiter" ])
                 , container (button [ class "button tile", disabled True ] [ text "Log / Undo" ])
