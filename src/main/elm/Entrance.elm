@@ -76,7 +76,7 @@ update msg model =
 
 container : Html Msg -> Html Msg
 container content =
-    div [ class ".container" ] [ content ]
+    div [ class "container" ] [ content ]
 
 
 view : Model -> Html Msg

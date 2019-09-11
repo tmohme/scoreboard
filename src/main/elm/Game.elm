@@ -239,11 +239,6 @@ viewWinnerModalDialog playerId =
         ]
 
 
-container : Html Msg -> Html Msg
-container content =
-    div [ class ".container" ] [ content ]
-
-
 view : Model -> Html Msg
 view model =
     let
@@ -264,25 +259,25 @@ view model =
                 ""
     in
     -- TODO do we really need div-div?
-    div
-        []
-        [ div
-            [ class "columns" ]
-            [ div [ class "column is-two-fifth is-centered has-text-centered" ]
+    div []
+        [ div [ class "columns" ]
+            [ div [ class "column is-two-fifth has-text-centered" ]
                 -- TODO get text from players
-                [ container (text "left")
-                , container (Player.view model.left isLeftShooting)
+                [ div [] [ text "left" ]
+                , div [] [ Player.view model.left isLeftShooting ]
                 ]
-            , div [ class "column is-one-fifth is-centered tile is-ancestor is-vertical" ]
-                [ container (text "14-1 Scoreboard")
-                , container (button [ class "button tile", disabled True ] [ text "RunTo" ])
-                , container (button [ class "button tile", disabled True ] [ text "Pause / Weiter" ])
-                , container (button [ class "button tile", disabled True ] [ text "Log / Undo" ])
-                , container (button [ class "button tile", disabled True ] [ text "Ende" ])
+            , div [ class "column is-one-fifth has-text-centered is-vertical" ]
+                [ div [] [ text "14-1 Scoreboard" ]
+                , div [ class "tile is-ancestor is-marginless is-vertical" ]
+                    [ button [ class "button tile", disabled True ] [ text "RunTo" ]
+                    , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
+                    , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
+                    , button [ class "button tile", disabled True ] [ text "Ende" ]
+                    ]
                 ]
-            , div [ class "column is-two-fifth is-centered has-text-centered" ]
-                [ container (text "right")
-                , container (Player.view model.right isRightShooting)
+            , div [ class "column is-two-fifth has-text-centered" ]
+                [ div [] [ text "right" ]
+                , div [] [ Player.view model.right isRightShooting ]
                 ]
             ]
         , nav [ class "level" ]
