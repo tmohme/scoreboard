@@ -1,6 +1,6 @@
 plugins {
   base
-  id("org.mohme.gradle.elm-plugin" ) version "3.2.2"
+  id("org.mohme.gradle.elm-plugin" ) version "3.3.0"
 }
 
 group = "org.mohme"
