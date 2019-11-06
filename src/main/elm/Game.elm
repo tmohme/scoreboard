@@ -21,6 +21,7 @@ type Msg
     = BallsLeftOnTable Int
     | ToggleFoul
     | WinnerShown
+    | Exit
 
 
 type alias Model =
@@ -105,89 +106,102 @@ determineWinner runToPoints left right =
         Nothing
 
 
+handleFoulToggle : Model -> Model
+handleFoulToggle model =
+    let
+        reason =
+            case model.switchReason of
+                Miss ->
+                    Foul
+
+                Foul ->
+                    Miss
+    in
+    { model | switchReason = reason }
+
+
+handleBallsLeftOnTable : Int -> Model -> Model
+handleBallsLeftOnTable remainingBalls model =
+    let
+        -- TODO special handling for break fouls
+        shotBalls =
+            model.ballsOnTable - remainingBalls
+
+        -- TODO replace 'gameFinished' flag by an ADT properly modeling the Game state (Break, Running, Finished)
+        gameFinished =
+            (model.shooting.points + shotBalls) >= model.runTo
+
+        playerSwitch =
+            if model.switchReason == Foul then
+                Yes Foul
+
+            else if gameFinished || (remainingBalls > 1) || (model.ballsOnTable == remainingBalls) then
+                Yes model.switchReason
+
+            else
+                No
+
+        ( left, leftTripleFoul ) =
+            -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
+            Player.update model.left model.shooting shotBalls playerSwitch model.runTo
+
+        ( right, rightTripleFoul ) =
+            Player.update model.right model.shooting shotBalls playerSwitch model.runTo
+
+        ballsToContinueWith =
+            if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
+                fullRack
+
+            else
+                remainingBalls
+
+        shootingNext =
+            determineShootingNext
+                model.shooting.id
+                playerSwitch
+                left
+                right
+
+        winner =
+            determineWinner model.runTo left right
+
+        showWinner =
+            case ( winner, model.showWinner ) of
+                ( Nothing, _ ) ->
+                    NotYet
+
+                ( Just player, NotYet ) ->
+                    ShowWinner player.id
+
+                ( Just _, _ ) ->
+                    AlreadyShown
+    in
+    { model
+        | ballsOnTable = ballsToContinueWith
+        , left = left
+        , right = right
+        , shooting = shootingNext
+        , winner = winner
+        , showWinner = showWinner
+        , switchReason = Miss
+    }
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         ToggleFoul ->
-            let
-                reason =
-                    case model.switchReason of
-                        Miss ->
-                            Foul
-
-                        Foul ->
-                            Miss
-            in
-            { model | switchReason = reason }
+            handleFoulToggle model
 
         BallsLeftOnTable remainingBalls ->
-            let
-                -- TODO special handling for break fouls
-                shotBalls =
-                    model.ballsOnTable - remainingBalls
-
-                -- TODO replace 'gameFinished' flag by an ADT properly modeling the Game state (Break, Running, Finished)
-                gameFinished =
-                    (model.shooting.points + shotBalls) >= model.runTo
-
-                playerSwitch =
-                    if model.switchReason == Foul then
-                        Yes Foul
-
-                    else if gameFinished || (remainingBalls > 1) || (model.ballsOnTable == remainingBalls) then
-                        Yes model.switchReason
-
-                    else
-                        No
-
-                ( left, leftTripleFoul ) =
-                    -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
-                    Player.update model.left model.shooting shotBalls playerSwitch model.runTo
-
-                ( right, rightTripleFoul ) =
-                    Player.update model.right model.shooting shotBalls playerSwitch model.runTo
-
-                ballsToContinueWith =
-                    if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
-                        fullRack
-
-                    else
-                        remainingBalls
-
-                shootingNext =
-                    determineShootingNext
-                        model.shooting.id
-                        playerSwitch
-                        left
-                        right
-
-                winner =
-                    determineWinner model.runTo left right
-
-                showWinner =
-                    case ( winner, model.showWinner ) of
-                        ( Nothing, _ ) ->
-                            NotYet
-
-                        ( Just player, NotYet ) ->
-                            ShowWinner player.id
-
-                        ( Just _, _ ) ->
-                            AlreadyShown
-            in
-            { model
-                | ballsOnTable = ballsToContinueWith
-                , left = left
-                , right = right
-                , shooting = shootingNext
-                , winner = winner
-                , showWinner = showWinner
-                , switchReason = Miss
-            }
+            handleBallsLeftOnTable remainingBalls model
 
         -- TODO game continues after winner has been shown
         WinnerShown ->
             { model | showWinner = AlreadyShown }
+
+        Exit ->
+            model
 
 
 viewBall : Int -> Int -> Html Msg
@@ -271,7 +285,7 @@ view model =
                     [ button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
                     , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
-                    , button [ class "button tile", disabled True ] [ text "Ende" ]
+                    , button [ class "button tile", onClick Exit ] [ text "Ende" ] -- TODO add confirmation dialog
                     ]
                 ]
             , div [ class "column is-two-fifth has-text-centered" ]

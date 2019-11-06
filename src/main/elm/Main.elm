@@ -48,6 +48,7 @@ update msg model =
 
                 ( page, mayBeGame ) =
                     case entranceMsg of
+                        -- TODO This is fishy
                         Entrance.Exit (Application.EntranceExit gameConfig) ->
                             ( Game, Just <| Game.init gameConfig )
 
@@ -71,9 +72,19 @@ update msg model =
 
                         Nothing ->
                             Nothing
+
+                ( page, mayBeGame ) =
+                    case gameMsg of
+                        -- TODO This is fishy
+                        Game.Exit ->
+                            ( Entrance, Nothing )
+
+                        _ ->
+                            ( Game, updatedGameModel )
             in
             ( { model
-                | game = updatedGameModel
+                | page = page
+                , game = mayBeGame
               }
             , Cmd.none
             )
