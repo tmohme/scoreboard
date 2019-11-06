@@ -19,7 +19,7 @@ import Player exposing (Player, PlayerSwitch(..), SwitchReason(..))
 
 type Msg
     = BallsLeftOnTable Int
-    | ToggleSwitchReason
+    | ToggleFoul
     | WinnerShown
 
 
@@ -108,7 +108,7 @@ determineWinner runToPoints left right =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ToggleSwitchReason ->
+        ToggleFoul ->
             let
                 reason =
                     case model.switchReason of
@@ -281,7 +281,7 @@ view model =
             ]
         , nav [ class "level" ]
             [ div [ class "level-item" ]
-                [ button [ class "button is-large", class latentFoul, onClick ToggleSwitchReason ] [ text "Foul" ] ]
+                [ button [ class "button is-large", class latentFoul, onClick ToggleFoul ] [ text "Foul" ] ]
             ]
         , div
             [ class "tile is-ancestor" ]

@@ -21,6 +21,7 @@ type Msg
 
 
 type alias Model =
+    -- TODO get rid of the attribute interdependencies
     { page : Page
     , entrance : Entrance.Model
     , game : Maybe Game.Model
@@ -112,7 +113,7 @@ view model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
