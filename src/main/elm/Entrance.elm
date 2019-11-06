@@ -1,6 +1,5 @@
 module Entrance exposing
-    ( Break
-    , Model
+    ( Model
     , Msg(..)
     , init
     , update
@@ -14,13 +13,8 @@ import Html.Events exposing (..)
 import Json.Decode
 
 
-type Break
-    = Undefined
-
-
 type alias Model =
-    { break : Break
-    , runTo : Int
+    { runTo : Int
     , runToBuffer : Maybe Int
     , runToModalVisible : Bool
     }
@@ -39,8 +33,7 @@ defaultTarget =
 
 init : Model
 init =
-    { break = Undefined
-    , runTo = defaultTarget
+    { runTo = defaultTarget
     , runToBuffer = Just defaultTarget
     , runToModalVisible = False
     }
