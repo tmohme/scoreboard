@@ -1,8 +1,7 @@
 module PlayerTest exposing (suite)
 
-import ApplicationSupport as AS
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
+import Fuzz exposing (Fuzzer, bool, int, intRange, tuple, tuple3)
 import Player exposing (Player, PlayerSwitch(..))
 import PlayerSupport exposing (leftPlayer, player, playerSwitch, rightPlayer, switchReason)
 import Test exposing (..)
