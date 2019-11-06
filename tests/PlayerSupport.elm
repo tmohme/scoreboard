@@ -6,7 +6,6 @@ import Fuzz exposing (Fuzzer)
 import Player as P
 
 
-
 switchReason : Fuzzer P.SwitchReason
 switchReason =
     Fuzz.oneOf
@@ -35,7 +34,7 @@ validPlayer pid pointsSoFar inningsSoFar currentStreakSoFar longestStreakSoFar f
         vPointsAtStreakStart =
             pointsSoFar - vCurrentStreak
     in
-    P.Player pid pointsSoFar inningsSoFar vCurrentStreak vLongestStreak vPointsAtStreakStart foulsSoFar
+    P.Player pid (App.nameOf pid) pointsSoFar inningsSoFar vCurrentStreak vLongestStreak vPointsAtStreakStart foulsSoFar
 
 
 points : Fuzzer Int

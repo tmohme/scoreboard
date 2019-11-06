@@ -17,6 +17,7 @@ type PlayerSwitch
 
 type alias Player =
     { id : App.PlayerId
+    , name : String
     , points : Int
     , innings : Int
     , currentStreak : Int
@@ -28,7 +29,7 @@ type alias Player =
 
 create : App.PlayerId -> Player
 create id =
-    Player id 0 0 0 0 0 0
+    Player id (App.nameOf id) 0 0 0 0 0 0
 
 
 calculateCurrentStreak : Int -> Int -> Int -> Int
