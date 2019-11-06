@@ -258,17 +258,16 @@ view model =
             else
                 ""
     in
-    -- TODO do we really need div-div?
     div []
         [ div [ class "columns" ]
             [ div [ class "column is-two-fifth has-text-centered" ]
-                -- TODO get text from players
-                [ div [] [ text "left" ]
+                [ div [] [ text (App.nameOf model.left.id) ]
                 , div [] [ Player.view model.left isLeftShooting ]
                 ]
             , div [ class "column is-one-fifth has-text-centered is-vertical" ]
                 [ div [] [ text "14-1 Scoreboard" ]
                 , div [ class "tile is-ancestor is-marginless is-vertical" ]
+                    -- TODO make buttons functional
                     [ button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
                     , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
@@ -276,7 +275,7 @@ view model =
                     ]
                 ]
             , div [ class "column is-two-fifth has-text-centered" ]
-                [ div [] [ text "right" ]
+                [ div [] [ text (App.nameOf model.right.id) ]
                 , div [] [ Player.view model.right isRightShooting ]
                 ]
             ]
