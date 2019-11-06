@@ -330,12 +330,13 @@ suite =
                         |> Expect.atLeast prevLongestStreak
 
             --
-            , fuzz2
+            , fuzz3
                 player
                 int
+                playerSwitch
                 "sets currentStreak when no switch and not won"
               <|
-                \aPlayer shotBalls ->
+                \aPlayer shotBalls playerSwitch ->
                     let
                         prevCurrentStreak =
                             aPlayer.currentStreak
@@ -343,12 +344,8 @@ suite =
                         runTo =
                             aPlayer.points + aPlayer.currentStreak + shotBalls + 1
 
-                        switch =
-                            -- TODO fuzz me
-                            No
-
                         ( updatedPlayer, _ ) =
-                            Player.update aPlayer aPlayer shotBalls switch runTo
+                            Player.update aPlayer aPlayer shotBalls playerSwitch runTo
                     in
                     updatedPlayer.currentStreak
                         |> Expect.equal (prevCurrentStreak + shotBalls)
