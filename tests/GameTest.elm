@@ -87,11 +87,18 @@ suite =
                             -- TODO replace constant
                             Game.init { playerId = App.Left, runTo = 150 }
 
+                        gameState =
+                            game.state
+
+                        configuredState =
+                            { gameState | switchReason = Player.Foul }
+
                         configuredGame =
-                            { game | left = leftPlayer, right = rightPlayer, switchReason = Player.Foul }
+                            { game | left = leftPlayer, right = rightPlayer, state = configuredState }
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> .state
                         |> .shooting
                         |> .id
                         |> Expect.equal rightPlayer.id
@@ -112,11 +119,18 @@ suite =
                             -- TODO replace constant
                             Game.init { playerId = App.Left, runTo = 150 }
 
+                        gameState =
+                            game.state
+
+                        configuredState =
+                            { gameState | switchReason = Player.Foul }
+
                         configuredGame =
-                            { game | left = foulingPlayer, right = rightPlayer, switchReason = Player.Foul }
+                            { game | left = foulingPlayer, right = rightPlayer, state = configuredState }
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> .state
                         |> .ballsOnTable
                         |> Expect.equal Game.fullRack
             ]

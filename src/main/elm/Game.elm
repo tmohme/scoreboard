@@ -31,14 +31,19 @@ type Modal
     | LogModal
 
 
+type alias State =
+    { shooting : Player
+    , ballsOnTable : Int
+    , switchReason : SwitchReason
+    }
+
+
 type alias Model =
     { left : Player
     , right : Player
-    , shooting : Player
-    , ballsOnTable : Int
+    , state : State
     , runTo : Int
     , winner : Maybe Player
-    , switchReason : SwitchReason
     , modal : Modal
     }
 
@@ -68,11 +73,13 @@ init config =
     in
     { left = left
     , right = right
-    , shooting = mapToPlayer config.playerId left right
-    , ballsOnTable = fullRack
+    , state =
+        { shooting = mapToPlayer config.playerId left right
+        , ballsOnTable = fullRack
+        , switchReason = Miss
+        }
     , runTo = config.runTo
     , winner = Nothing
-    , switchReason = Miss
     , modal = None
     }
 
@@ -110,15 +117,21 @@ determineWinner runToPoints left right =
 handleFoulToggle : Model -> Model
 handleFoulToggle model =
     let
-        reason =
-            case model.switchReason of
+        switchReason =
+            case model.state.switchReason of
                 Miss ->
                     Foul
 
                 Foul ->
                     Miss
+
+        oldState =
+            model.state
+
+        newState =
+            { oldState | switchReason = switchReason }
     in
-    { model | switchReason = reason }
+    { model | state = newState }
 
 
 handleBallsLeftOnTable : Int -> Model -> Model
@@ -126,28 +139,28 @@ handleBallsLeftOnTable remainingBalls model =
     let
         -- TODO special handling for break fouls
         shotBalls =
-            model.ballsOnTable - remainingBalls
+            model.state.ballsOnTable - remainingBalls
 
         -- TODO replace 'gameFinished' flag by an ADT properly modeling the Game state (Break, Running, Finished)
         gameFinished =
-            (model.shooting.points + shotBalls) >= model.runTo
+            (model.state.shooting.points + shotBalls) >= model.runTo
 
         playerSwitch =
-            if model.switchReason == Foul then
+            if model.state.switchReason == Foul then
                 Yes Foul
 
-            else if gameFinished || (remainingBalls > 1) || (model.ballsOnTable == remainingBalls) then
-                Yes model.switchReason
+            else if gameFinished || (remainingBalls > 1) || (model.state.ballsOnTable == remainingBalls) then
+                Yes model.state.switchReason
 
             else
                 No
 
         ( left, leftTripleFoul ) =
             -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
-            Player.update model.left model.shooting shotBalls playerSwitch model.runTo
+            Player.update model.left model.state.shooting shotBalls playerSwitch model.runTo
 
         ( right, rightTripleFoul ) =
-            Player.update model.right model.shooting shotBalls playerSwitch model.runTo
+            Player.update model.right model.state.shooting shotBalls playerSwitch model.runTo
 
         ballsToContinueWith =
             if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
@@ -158,7 +171,7 @@ handleBallsLeftOnTable remainingBalls model =
 
         shootingNext =
             determineShootingNext
-                model.shooting.id
+                model.state.shooting.id
                 playerSwitch
                 left
                 right
@@ -175,12 +188,10 @@ handleBallsLeftOnTable remainingBalls model =
                     WinnerModal player.id
     in
     { model
-        | ballsOnTable = ballsToContinueWith
-        , left = left
+        | left = left
         , right = right
-        , shooting = shootingNext
+        , state = { ballsOnTable = ballsToContinueWith, shooting = shootingNext, switchReason = Miss }
         , winner = winner
-        , switchReason = Miss
         , modal = modal
     }
 
@@ -298,16 +309,16 @@ view : Model -> Html Msg
 view model =
     let
         isLeftShooting =
-            model.shooting == model.left
+            model.state.shooting == model.left
 
         isRightShooting =
-            model.shooting == model.right
+            model.state.shooting == model.right
 
         max =
-            model.ballsOnTable
+            model.state.ballsOnTable
 
         latentFoul =
-            if model.switchReason == Foul then
+            if model.state.switchReason == Foul then
                 "is-warning"
 
             else
