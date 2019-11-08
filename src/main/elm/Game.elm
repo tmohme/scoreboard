@@ -25,6 +25,12 @@ type Msg
     | ExitGame
 
 
+type Modal
+    = None
+    | WinnerModal App.PlayerId
+    | LogModal
+
+
 type alias Model =
     { left : Player
     , right : Player
@@ -33,16 +39,8 @@ type alias Model =
     , runTo : Int
     , winner : Maybe Player
     , switchReason : SwitchReason
-
-    -- TODO ensure only one modal at any given point in time
-    , showWinner : ShowWinner
-    , showLog : Bool
+    , modal : Modal
     }
-
-
-type ShowWinner
-    = NotYet
-    | ShowWinner App.PlayerId
 
 
 fullRack =
@@ -75,8 +73,7 @@ init config =
     , runTo = config.runTo
     , winner = Nothing
     , switchReason = Miss
-    , showWinner = NotYet
-    , showLog = False
+    , modal = None
     }
 
 
@@ -169,13 +166,13 @@ handleBallsLeftOnTable remainingBalls model =
         winner =
             determineWinner model.runTo left right
 
-        showWinner =
+        modal =
             case winner of
                 Nothing ->
-                    NotYet
+                    None
 
                 Just player ->
-                    ShowWinner player.id
+                    WinnerModal player.id
     in
     { model
         | ballsOnTable = ballsToContinueWith
@@ -183,8 +180,8 @@ handleBallsLeftOnTable remainingBalls model =
         , right = right
         , shooting = shootingNext
         , winner = winner
-        , showWinner = showWinner
         , switchReason = Miss
+        , modal = modal
     }
 
 
@@ -199,11 +196,11 @@ update msg model =
 
         -- TODO implement me
         ShowLog ->
-            { model | showLog = True }
+            { model | modal = LogModal }
 
         -- TODO implement me
         CloseLog ->
-            { model | showLog = False }
+            { model | modal = None }
 
         ExitGame ->
             model
@@ -229,8 +226,8 @@ viewBall max n =
         ]
 
 
-showLogModalDialog : Html Msg
-showLogModalDialog =
+viewLogModalDialog : Html Msg
+viewLogModalDialog =
     div [ class "modal is-active", attribute "aria-label" "Modal title" ]
         [ div [ class "modal-background", onClick CloseLog ]
             []
@@ -284,6 +281,19 @@ viewWinnerModalDialog playerId =
         ]
 
 
+viewModalDialog : Modal -> Html Msg
+viewModalDialog modal =
+    case modal of
+        WinnerModal winnerId ->
+            viewWinnerModalDialog winnerId
+
+        LogModal ->
+            viewLogModalDialog
+
+        None ->
+            text ""
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -335,17 +345,5 @@ view model =
                 fullRack
                 |> List.map (\n -> viewBall max n)
             )
-
-        -- TODO combine both paths to a showModal function
-        , case model.showWinner of
-            ShowWinner winnerId ->
-                viewWinnerModalDialog winnerId
-
-            _ ->
-                text ""
-        , if model.showLog then
-            showLogModalDialog
-
-          else
-            text ""
+        , viewModalDialog model.modal
         ]
