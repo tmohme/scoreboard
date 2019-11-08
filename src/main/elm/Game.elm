@@ -21,6 +21,8 @@ type Msg
     = BallsLeftOnTable Int
     | ToggleFoul
     | WinnerShown
+    | ShowLog
+    | CloseLog
     | Exit
 
 
@@ -31,8 +33,11 @@ type alias Model =
     , ballsOnTable : Int
     , runTo : Int
     , winner : Maybe Player
-    , showWinner : ShowWinner
     , switchReason : SwitchReason
+
+    -- TODO ensure only one modal at any given point in time
+    , showWinner : ShowWinner
+    , showLog : Bool
     }
 
 
@@ -71,8 +76,9 @@ init config =
     , ballsOnTable = fullRack
     , runTo = config.runTo
     , winner = Nothing
-    , showWinner = NotYet
     , switchReason = Miss
+    , showWinner = NotYet
+    , showLog = False
     }
 
 
@@ -200,6 +206,14 @@ update msg model =
         WinnerShown ->
             { model | showWinner = AlreadyShown }
 
+        -- TODO implement me
+        ShowLog ->
+            { model | showLog = True }
+
+        -- TODO implement me
+        CloseLog ->
+            { model | showLog = False }
+
         Exit ->
             model
 
@@ -221,6 +235,32 @@ viewBall max n =
             , onClick (BallsLeftOnTable n)
             ]
             []
+        ]
+
+
+showLogModalDialog : Html Msg
+showLogModalDialog =
+    div [ class "modal is-active", attribute "aria-label" "Modal title" ]
+        [ div [ class "modal-background", onClick WinnerShown ]
+            []
+        , div [ class "modal-card" ]
+            [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = CloseLog, preventDefault = True, stopPropagation = True }) ]
+                [ Html.header
+                    [ class "modal-card-head" ]
+                    [ p [ class "modal-card-title" ]
+                        [ text "Spielverlauf" ]
+                    , button [ class "delete", onClick CloseLog, attribute "aria-label" "close" ]
+                        []
+                    ]
+                , section [ class "modal-card-body" ]
+                    [-- TODO add content
+                    ]
+                , footer [ class "modal-card-foot" ]
+                    [ button [ type_ "button", class "button is-primary", onClick CloseLog, attribute "aria-label" "OK" ]
+                        [ text "OK" ]
+                    ]
+                ]
+            ]
         ]
 
 
@@ -284,7 +324,7 @@ view model =
                     -- TODO make buttons functional
                     [ button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
-                    , button [ class "button tile", disabled True ] [ text "Log / Undo" ]
+                    , button [ class "button tile", onClick ShowLog ] [ text "Log" ]
                     , button [ class "button tile", onClick Exit ] [ text "Ende" ] -- TODO add confirmation dialog
                     ]
                 ]
@@ -304,10 +344,17 @@ view model =
                 fullRack
                 |> List.map (\n -> viewBall max n)
             )
+
+        -- TODO combine both paths to a showModal function
         , case model.showWinner of
             ShowWinner winnerId ->
                 viewWinnerModalDialog winnerId
 
             _ ->
                 text ""
+        , if model.showLog then
+            showLogModalDialog
+
+          else
+            text ""
         ]

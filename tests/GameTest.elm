@@ -3,13 +3,10 @@ module GameTest exposing (suite)
 import Application as App
 import ApplicationSupport as AS
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, bool, int, intRange, list, string, tuple, tuple3)
+import Fuzz exposing (Fuzzer, intRange, tuple3)
 import Game
 import Player
 import PlayerSupport as PS
-import Random exposing (Generator, map)
-import Random.Extra exposing (andMap)
-import Shrink exposing (Shrinker)
 import Test exposing (..)
 
 
@@ -95,7 +92,8 @@ suite =
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
-                        |> .shooting |> .id
+                        |> .shooting
+                        |> .id
                         |> Expect.equal rightPlayer.id
 
             --
