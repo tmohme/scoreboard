@@ -7,7 +7,7 @@ type PlayerId
 
 
 type alias GameConfig =
-    { playerId : PlayerId, runTo : Int }
+    { breakingPlayerId : PlayerId, runTo : Int }
 
 
 type Event

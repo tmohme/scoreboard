@@ -32,16 +32,16 @@ type Modal
 
 
 type alias State =
-    { shooting : Player
+    { left : Player
+    , right : Player
+    , shooting : Player
     , ballsOnTable : Int
     , switchReason : SwitchReason
     }
 
 
 type alias Model =
-    { left : Player
-    , right : Player
-    , state : State
+    { state : State
     , runTo : Int
     , winner : Maybe Player
     , modal : Modal
@@ -63,7 +63,7 @@ mapToPlayer playerId left right =
 
 
 init : App.GameConfig -> Model
-init config =
+init gameConfig =
     let
         left =
             Player.create App.Left
@@ -71,14 +71,14 @@ init config =
         right =
             Player.create App.Right
     in
-    { left = left
-    , right = right
-    , state =
-        { shooting = mapToPlayer config.playerId left right
+    { state =
+        { left = left
+        , right = right
+        , shooting = mapToPlayer gameConfig.breakingPlayerId left right
         , ballsOnTable = fullRack
         , switchReason = Miss
         }
-    , runTo = config.runTo
+    , runTo = gameConfig.runTo
     , winner = Nothing
     , modal = None
     }
@@ -155,12 +155,12 @@ handleBallsLeftOnTable remainingBalls model =
             else
                 No
 
-        ( left, leftTripleFoul ) =
+        ( updatedLeft, leftTripleFoul ) =
             -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
-            Player.update model.left model.state.shooting shotBalls playerSwitch model.runTo
+            Player.update model.state.left model.state.shooting shotBalls playerSwitch model.runTo
 
-        ( right, rightTripleFoul ) =
-            Player.update model.right model.state.shooting shotBalls playerSwitch model.runTo
+        ( updatedRight, rightTripleFoul ) =
+            Player.update model.state.right model.state.shooting shotBalls playerSwitch model.runTo
 
         ballsToContinueWith =
             if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
@@ -173,11 +173,11 @@ handleBallsLeftOnTable remainingBalls model =
             determineShootingNext
                 model.state.shooting.id
                 playerSwitch
-                left
-                right
+                updatedLeft
+                updatedRight
 
         winner =
-            determineWinner model.runTo left right
+            determineWinner model.runTo updatedLeft updatedRight
 
         modal =
             case winner of
@@ -188,9 +188,13 @@ handleBallsLeftOnTable remainingBalls model =
                     WinnerModal player.id
     in
     { model
-        | left = left
-        , right = right
-        , state = { ballsOnTable = ballsToContinueWith, shooting = shootingNext, switchReason = Miss }
+        | state =
+            { left = updatedLeft
+            , right = updatedRight
+            , ballsOnTable = ballsToContinueWith
+            , shooting = shootingNext
+            , switchReason = Miss
+            }
         , winner = winner
         , modal = modal
     }
@@ -309,10 +313,10 @@ view : Model -> Html Msg
 view model =
     let
         isLeftShooting =
-            model.state.shooting == model.left
+            model.state.shooting == model.state.left
 
         isRightShooting =
-            model.state.shooting == model.right
+            model.state.shooting == model.state.right
 
         max =
             model.state.ballsOnTable
@@ -327,8 +331,8 @@ view model =
     div []
         [ div [ class "columns" ]
             [ div [ class "column is-two-fifth has-text-centered" ]
-                [ div [] [ text model.left.name ]
-                , div [] [ Player.view model.left isLeftShooting ]
+                [ div [] [ text model.state.left.name ]
+                , div [] [ Player.view model.state.left isLeftShooting ]
                 ]
             , div [ class "column is-one-fifth has-text-centered is-vertical" ]
                 [ div [] [ text "14-1 Scoreboard" ]
@@ -341,8 +345,8 @@ view model =
                     ]
                 ]
             , div [ class "column is-two-fifth has-text-centered" ]
-                [ div [] [ text model.right.name ]
-                , div [] [ Player.view model.right isRightShooting ]
+                [ div [] [ text model.state.right.name ]
+                , div [] [ Player.view model.state.right isRightShooting ]
                 ]
             ]
         , nav [ class "level" ]

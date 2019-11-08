@@ -64,6 +64,7 @@ update player shooting shotBalls playerSwitch runToPoints =
 
                 else
                     case playerSwitch of
+                        -- TODO DEFECT only increment fouls when BallsLeftOnTable did not change -> immediate foul
                         Yes Foul ->
                             if player.previousFouls == 2 then
                                 0

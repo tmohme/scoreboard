@@ -85,16 +85,16 @@ suite =
                     let
                         game =
                             -- TODO replace constant
-                            Game.init { playerId = App.Left, runTo = 150 }
+                            Game.init { breakingPlayerId = App.Left, runTo = 150 }
 
                         gameState =
                             game.state
 
                         configuredState =
-                            { gameState | switchReason = Player.Foul }
+                            { gameState | left = leftPlayer, right = rightPlayer, switchReason = Player.Foul }
 
                         configuredGame =
-                            { game | left = leftPlayer, right = rightPlayer, state = configuredState }
+                            { game | state = configuredState }
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
@@ -117,16 +117,16 @@ suite =
 
                         game =
                             -- TODO replace constant
-                            Game.init { playerId = App.Left, runTo = 150 }
+                            Game.init { breakingPlayerId = App.Left, runTo = 150 }
 
                         gameState =
                             game.state
 
                         configuredState =
-                            { gameState | switchReason = Player.Foul }
+                            { gameState | left = foulingPlayer, right = rightPlayer, switchReason = Player.Foul }
 
                         configuredGame =
-                            { game | left = foulingPlayer, right = rightPlayer, state = configuredState }
+                            { game | state = configuredState }
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
