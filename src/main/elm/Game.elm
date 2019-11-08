@@ -20,10 +20,9 @@ import Player exposing (Player, PlayerSwitch(..), SwitchReason(..))
 type Msg
     = BallsLeftOnTable Int
     | ToggleFoul
-    | WinnerShown
     | ShowLog
     | CloseLog
-    | Exit
+    | ExitGame
 
 
 type alias Model =
@@ -44,7 +43,6 @@ type alias Model =
 type ShowWinner
     = NotYet
     | ShowWinner App.PlayerId
-    | AlreadyShown
 
 
 fullRack =
@@ -172,15 +170,12 @@ handleBallsLeftOnTable remainingBalls model =
             determineWinner model.runTo left right
 
         showWinner =
-            case ( winner, model.showWinner ) of
-                ( Nothing, _ ) ->
+            case winner of
+                Nothing ->
                     NotYet
 
-                ( Just player, NotYet ) ->
+                Just player ->
                     ShowWinner player.id
-
-                ( Just _, _ ) ->
-                    AlreadyShown
     in
     { model
         | ballsOnTable = ballsToContinueWith
@@ -202,10 +197,6 @@ update msg model =
         BallsLeftOnTable remainingBalls ->
             handleBallsLeftOnTable remainingBalls model
 
-        -- TODO game continues after winner has been shown
-        WinnerShown ->
-            { model | showWinner = AlreadyShown }
-
         -- TODO implement me
         ShowLog ->
             { model | showLog = True }
@@ -214,7 +205,7 @@ update msg model =
         CloseLog ->
             { model | showLog = False }
 
-        Exit ->
+        ExitGame ->
             model
 
 
@@ -241,7 +232,7 @@ viewBall max n =
 showLogModalDialog : Html Msg
 showLogModalDialog =
     div [ class "modal is-active", attribute "aria-label" "Modal title" ]
-        [ div [ class "modal-background", onClick WinnerShown ]
+        [ div [ class "modal-background", onClick CloseLog ]
             []
         , div [ class "modal-card" ]
             [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = CloseLog, preventDefault = True, stopPropagation = True }) ]
@@ -267,15 +258,15 @@ showLogModalDialog =
 viewWinnerModalDialog : App.PlayerId -> Html Msg
 viewWinnerModalDialog playerId =
     div [ class "modal is-active", attribute "aria-label" "Modal title" ]
-        [ div [ class "modal-background", onClick WinnerShown ]
+        [ div [ class "modal-background", onClick ExitGame ]
             []
         , div [ class "modal-card" ]
-            [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = WinnerShown, preventDefault = True, stopPropagation = True }) ]
+            [ Html.form [ action "", Html.Events.custom "submit" (Json.Decode.succeed { message = ExitGame, preventDefault = True, stopPropagation = True }) ]
                 [ Html.header
                     [ class "modal-card-head" ]
                     [ p [ class "modal-card-title" ]
                         [ text "Gewinner" ]
-                    , button [ class "delete", onClick WinnerShown, attribute "aria-label" "close" ]
+                    , button [ class "delete", onClick ExitGame, attribute "aria-label" "close" ]
                         []
                     ]
                 , section [ class "modal-card-body" ]
@@ -285,7 +276,7 @@ viewWinnerModalDialog playerId =
                         ]
                     ]
                 , footer [ class "modal-card-foot" ]
-                    [ button [ type_ "button", class "button is-primary", onClick WinnerShown, attribute "aria-label" "OK" ]
+                    [ button [ type_ "button", class "button is-primary", onClick ExitGame, attribute "aria-label" "OK" ]
                         [ text "OK" ]
                     ]
                 ]
@@ -325,7 +316,7 @@ view model =
                     [ button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
                     , button [ class "button tile", onClick ShowLog ] [ text "Log" ]
-                    , button [ class "button tile", onClick Exit ] [ text "Ende" ] -- TODO add confirmation dialog
+                    , button [ class "button tile", onClick ExitGame ] [ text "Ende" ] -- TODO add confirmation dialog
                     ]
                 ]
             , div [ class "column is-two-fifth has-text-centered" ]

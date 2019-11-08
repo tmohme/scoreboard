@@ -76,7 +76,7 @@ update msg model =
                 ( page, mayBeGame ) =
                     case gameMsg of
                         -- TODO This is fishy
-                        Game.Exit ->
+                        Game.ExitGame ->
                             ( Entrance, Nothing )
 
                         _ ->
