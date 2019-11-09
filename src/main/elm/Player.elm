@@ -6,7 +6,7 @@ import Html.Attributes exposing (..)
 
 
 type SwitchReason
-    = Miss
+    = Miss -- TODO do we nee something extra for "break"?
     | Foul
 
 

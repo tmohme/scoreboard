@@ -42,6 +42,7 @@ type alias State =
 
 type alias Model =
     { state : State
+    , history : List State
     , runTo : Int
     , winner : Maybe Player
     , modal : Modal
@@ -78,6 +79,7 @@ init gameConfig =
         , ballsOnTable = fullRack
         , switchReason = Miss
         }
+    , history = []
     , runTo = gameConfig.runTo
     , winner = Nothing
     , modal = None
@@ -186,6 +188,9 @@ handleBallsLeftOnTable remainingBalls model =
 
                 Just player ->
                     WinnerModal player.id
+
+        newHistory =
+            model.state :: model.history
     in
     { model
         | state =
@@ -195,6 +200,7 @@ handleBallsLeftOnTable remainingBalls model =
             , shooting = shootingNext
             , switchReason = Miss
             }
+        , history = newHistory
         , winner = winner
         , modal = modal
     }
