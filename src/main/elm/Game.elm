@@ -247,8 +247,39 @@ viewBall max n =
         ]
 
 
-viewLogModalDialog : Html Msg
-viewLogModalDialog =
+viewGameState : State -> Html Msg
+viewGameState state =
+    let
+        isLeftShooting =
+            if state.shooting == state.left then
+                "has-background-primary"
+
+            else
+                ""
+
+        isRightShooting =
+            if state.shooting == state.right then
+                "has-background-primary"
+
+            else
+                ""
+    in
+    div [ class "columns" ]
+        [ div [ class "column has-text-centered", class isLeftShooting ]
+            [ text <| String.fromInt state.left.points ]
+        , div [ class "column has-text-centered", class isRightShooting ]
+            [ text <| String.fromInt state.right.points ]
+        ]
+
+
+viewGameHistory : List State -> Html Msg
+viewGameHistory history =
+    div []
+        (List.map viewGameState history)
+
+
+viewLogModalDialog : List State -> Html Msg
+viewLogModalDialog history =
     div [ class "modal is-active", attribute "aria-label" "Modal title" ]
         [ div [ class "modal-background", onClick CloseLog ]
             []
@@ -262,7 +293,7 @@ viewLogModalDialog =
                         []
                     ]
                 , section [ class "modal-card-body" ]
-                    [-- TODO add content
+                    [ viewGameHistory history
                     ]
                 , footer [ class "modal-card-foot" ]
                     [ button [ type_ "button", class "button is-primary", onClick CloseLog, attribute "aria-label" "OK" ]
@@ -302,14 +333,14 @@ viewWinnerModalDialog playerId =
         ]
 
 
-viewModalDialog : Modal -> Html Msg
-viewModalDialog modal =
+viewModalDialog : Modal -> List State -> Html Msg
+viewModalDialog modal history =
     case modal of
         WinnerModal winnerId ->
             viewWinnerModalDialog winnerId
 
         LogModal ->
-            viewLogModalDialog
+            viewLogModalDialog history
 
         None ->
             text ""
@@ -366,5 +397,5 @@ view model =
                 fullRack
                 |> List.map (\n -> viewBall max n)
             )
-        , viewModalDialog model.modal
+        , viewModalDialog model.modal model.history
         ]
