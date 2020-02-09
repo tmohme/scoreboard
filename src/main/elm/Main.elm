@@ -19,7 +19,6 @@ type Page
 type Msg
     = EntranceMsg Entrance.Msg
     | GameMsg Game.Msg
-    | IsFullscreen Bool
 
 
 type alias Model =
@@ -43,13 +42,6 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        IsFullscreen b ->
-            let
-                x =
-                    Debug.log "isFullscreen" b
-            in
-            ( model, Cmd.none )
-
         EntranceMsg entranceMsg ->
             let
                 updatedEntranceModel =
@@ -135,7 +127,12 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Ports.isFullscreen IsFullscreen
+    Ports.isFullscreen toGameMsg
+
+
+toGameMsg : Bool -> Msg
+toGameMsg bool =
+    GameMsg (Game.IsFullscreen bool)
 
 
 main : Program () Model Msg
