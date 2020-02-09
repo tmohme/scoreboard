@@ -21,7 +21,7 @@
         * @license MIT
         */
         if (!Element.prototype.requestFullscreen) {
-        Element.prototype.requestFullscreen = Element.prototype.mozRequestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen;
+            Element.prototype.requestFullscreen = Element.prototype.mozRequestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen;
         }
     </script>
 
@@ -40,6 +40,24 @@
                     elmContainer.requestFullscreen();
                 }
             });
+
+            if (document.onfullscreenchange === null)
+                document.onfullscreenchange = onFullScreenChange;
+            else if (document.onmsfullscreenchange === null)
+                document.onmsfullscreenchange = onFullScreenChange;
+            else if (document.onmozfullscreenchange === null)
+                document.onmozfullscreenchange = onFullScreenChange;
+            else if (document.onwebkitfullscreenchange === null)
+                document.onwebkitfullscreenchange = onFullScreenChange;
+
+            function onFullScreenChange(event) {
+                var fullscreenElement = document.fullscreenElement ||
+                    document.webkitFullscreenElement ||
+                    document.mozFullScreenElement ||
+                    document.msFullscreenElement
+
+                app.ports.isFullscreen.send(fullscreenElement != null)
+            };
         </script>
     </div>
 </body>
