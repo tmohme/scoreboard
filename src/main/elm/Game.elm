@@ -15,10 +15,12 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
 import Player exposing (Player, PlayerSwitch(..), SwitchReason(..))
+import Ports
 
 
 type Msg
     = BallsLeftOnTable Int
+    | Fullscreen
     | ToggleFoul
     | ShowLog
     | CloseLog
@@ -206,25 +208,28 @@ handleBallsLeftOnTable remainingBalls model =
     }
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Fullscreen ->
+            ( model, Ports.requestFullscreen True )
+
         ToggleFoul ->
-            handleFoulToggle model
+            ( handleFoulToggle model, Cmd.none )
 
         BallsLeftOnTable remainingBalls ->
-            handleBallsLeftOnTable remainingBalls model
+            ( handleBallsLeftOnTable remainingBalls model, Cmd.none )
 
         -- TODO implement me
         ShowLog ->
-            { model | modal = LogModal }
+            ( { model | modal = LogModal }, Cmd.none )
 
         -- TODO implement me
         CloseLog ->
-            { model | modal = None }
+            ( { model | modal = None }, Cmd.none )
 
         ExitGame ->
-            model
+            ( model, Cmd.none )
 
 
 viewBall : Int -> Int -> Html Msg
@@ -375,7 +380,8 @@ view model =
                 [ div [] [ text "14-1 Scoreboard" ]
                 , div [ class "tile is-ancestor is-marginless is-vertical" ]
                     -- TODO make buttons functional
-                    [ button [ class "button tile", disabled True ] [ text "RunTo" ]
+                    [ button [ class "button tile", onClick Fullscreen, attribute "onClick" "window.enterFullScreen()" ] [ text "Fullscreen" ]
+                    , button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
                     , button [ class "button tile", onClick ShowLog ] [ text "Log" ]
                     , button [ class "button tile", onClick ExitGame ] [ text "Ende" ] -- TODO add confirmation dialog

@@ -98,6 +98,7 @@ suite =
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> Tuple.first
                         |> .state
                         |> .shooting
                         |> .id
@@ -130,6 +131,7 @@ suite =
                     in
                     configuredGame
                         |> Game.update (Game.BallsLeftOnTable ballsOnTable)
+                        |> Tuple.first
                         |> .state
                         |> .ballsOnTable
                         |> Expect.equal Game.fullRack

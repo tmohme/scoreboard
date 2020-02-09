@@ -14,11 +14,32 @@
 </head>
 
 <body>
-    <div id="main"></div>
-    <script src="elm/main.js"></script>
     <script>
-      const app = Elm.Main.init({
-        node: document.getElementById('main')
-      });
+        /**
+        * Element.requestFullScreen() polyfill
+        * @author Chris Ferdinandi
+        * @license MIT
+        */
+        if (!Element.prototype.requestFullscreen) {
+        Element.prototype.requestFullscreen = Element.prototype.mozRequestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen;
+        }
     </script>
+
+    <div id="elm-container">
+        <div id="elm-code-is-loaded-here"></div>
+        <script src="elm/main.js"></script>
+        <script>
+            const replacedByElm = document.getElementById("elm-code-is-loaded-here")
+            const app = Elm.Main.init({
+                node: replacedByElm
+            });
+
+            const elmContainer = document.getElementById("elm-container")
+            app.ports.requestFullscreen.subscribe(function(boolean){
+                if(elmContainer.requestFullscreen) {
+                    elmContainer.requestFullscreen();
+                }
+            });
+        </script>
+    </div>
 </body>

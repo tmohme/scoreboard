@@ -1,12 +1,13 @@
 plugins {
   base
-  id("org.mohme.gradle.elm-plugin" ) version "3.3.0"
+  id("org.mohme.gradle.elm-plugin" ) version "4.0.1"
 }
 
 group = "org.mohme"
 version = "1.0-SNAPSHOT"
 
 elm {
+  executable.set(org.mohme.gradle.Executable.Download.V_0_19_1)
   sourceDir.set(project.file("src/main/elm"))
   targetModuleName.set("main.js")
   debug.set(true)

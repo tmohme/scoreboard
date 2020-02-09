@@ -65,28 +65,29 @@ update msg model =
 
         GameMsg gameMsg ->
             let
-                updatedGameModel =
-                    case model.game of
-                        Just aGame ->
-                            Just <| Game.update gameMsg aGame
-
-                        Nothing ->
-                            Nothing
-
-                ( page, mayBeGame ) =
+                ( page, mayBeGame, cmd ) =
                     case gameMsg of
                         -- TODO This is fishy
                         Game.ExitGame ->
-                            ( Entrance, Nothing )
+                            ( Entrance, Nothing, Cmd.none )
 
                         _ ->
-                            ( Game, updatedGameModel )
+                            case model.game of
+                                Just aGame ->
+                                    let
+                                        ( newGameModel, aCmd ) =
+                                            Game.update gameMsg aGame
+                                    in
+                                    ( Game, Just newGameModel, Cmd.map GameMsg aCmd )
+
+                                Nothing ->
+                                    ( Game, Nothing, Cmd.none )
             in
             ( { model
                 | page = page
                 , game = mayBeGame
               }
-            , Cmd.none
+            , cmd
             )
 
 
