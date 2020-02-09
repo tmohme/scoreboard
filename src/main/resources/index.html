@@ -35,9 +35,21 @@
             });
 
             const elmContainer = document.getElementById("elm-container")
-            app.ports.requestFullscreen.subscribe(function(boolean){
-                if(elmContainer.requestFullscreen) {
-                    elmContainer.requestFullscreen();
+            app.ports.requestFullscreen.subscribe(function(fullScreenRequested) {
+                console.log(`fullScreenRequested = $fullScreenRequested`)
+                if (fullScreenRequested) {
+                    if (elmContainer.requestFullscreen) {
+                        elmContainer.requestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen)
+                        document.exitFullscreen();
+                    else if (document.webkitExitFullscreen)
+                        document.webkitExitFullscreen();
+                    else if (document.mozCancelFullScreen)
+                        document.mozCancelFullScreen();
+                    else if (document.msExitFullscreen)
+                        document.msExitFullscreen();
                 }
             });
 

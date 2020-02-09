@@ -21,7 +21,7 @@ import Ports
 type Msg
     = BallsLeftOnTable Int
     | IsFullscreen Bool
-    | RequestFullscreen
+    | RequestFullscreen Bool
     | ToggleFoul
     | ShowLog
     | CloseLog
@@ -214,11 +214,11 @@ handleBallsLeftOnTable remainingBalls model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        IsFullscreen b ->
-            ( { model | isFullscreen = b }, Cmd.none )
+        IsFullscreen bool ->
+            ( { model | isFullscreen = bool }, Cmd.none )
 
-        RequestFullscreen ->
-            ( model, Ports.requestFullscreen True )
+        RequestFullscreen bool ->
+            ( model, Ports.requestFullscreen bool )
 
         ToggleFoul ->
             ( handleFoulToggle model, Cmd.none )
@@ -382,6 +382,9 @@ view model =
 
             else
                 "Fullscreen"
+
+        fullscreenMsg =
+            RequestFullscreen (not model.isFullscreen)
     in
     div []
         [ div [ class "columns" ]
@@ -393,7 +396,7 @@ view model =
                 [ div [] [ text "14-1 Scoreboard" ]
                 , div [ class "tile is-ancestor is-marginless is-vertical" ]
                     -- TODO make buttons functional
-                    [ button [ class "button tile", onClick RequestFullscreen, attribute "onClick" "window.enterFullScreen()" ] [ text fullscreenText ]
+                    [ button [ class "button tile", onClick fullscreenMsg, attribute "onClick" "window.enterFullScreen()" ] [ text fullscreenText ]
                     , button [ class "button tile", disabled True ] [ text "RunTo" ]
                     , button [ class "button tile", disabled True ] [ text "Pause / Weiter" ]
                     , button [ class "button tile", onClick ShowLog ] [ text "Log" ]
