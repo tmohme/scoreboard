@@ -11,65 +11,61 @@
             font-size: 20vw;
         }
     </style>
+
+    <script>
+        /**
+         * Element.requestFullScreen() polyfill
+         * @author Chris Ferdinandi
+         * @license MIT
+         */
+        if (!Element.prototype.requestFullscreen) {
+            Element.prototype.requestFullscreen
+                = Element.prototype.mozRequestFullscreen
+                || Element.prototype.webkitRequestFullscreen
+                || Element.prototype.msRequestFullscreen;
+        }
+    </script>
+    <script src="elm/main.js"></script>
 </head>
 
 <body>
-    <script>
-        /**
-        * Element.requestFullScreen() polyfill
-        * @author Chris Ferdinandi
-        * @license MIT
-        */
-        if (!Element.prototype.requestFullscreen) {
-            Element.prototype.requestFullscreen = Element.prototype.mozRequestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen;
+<script>
+    const app = Elm.Main.init();
+
+    const elmContainer = document.body;
+    app.ports.requestFullscreen.subscribe(function (fullScreenRequested) {
+        if (fullScreenRequested) {
+            if (elmContainer.requestFullscreen) {
+                elmContainer.requestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen)
+                document.exitFullscreen();
+            else if (document.webkitExitFullscreen)
+                document.webkitExitFullscreen();
+            else if (document.mozCancelFullScreen)
+                document.mozCancelFullScreen();
+            else if (document.msExitFullscreen)
+                document.msExitFullscreen();
         }
-    </script>
+    });
 
-    <div id="elm-container">
-        <div id="elm-code-is-loaded-here"></div>
-        <script src="elm/main.js"></script>
-        <script>
-            const replacedByElm = document.getElementById("elm-code-is-loaded-here")
-            const app = Elm.Main.init({
-                node: replacedByElm
-            });
+    if (document.onfullscreenchange === null)
+        document.onfullscreenchange = onFullScreenChange;
+    else if (document.onmsfullscreenchange === null)
+        document.onmsfullscreenchange = onFullScreenChange;
+    else if (document.onmozfullscreenchange === null)
+        document.onmozfullscreenchange = onFullScreenChange;
+    else if (document.onwebkitfullscreenchange === null)
+        document.onwebkitfullscreenchange = onFullScreenChange;
 
-            const elmContainer = document.getElementById("elm-container")
-            app.ports.requestFullscreen.subscribe(function(fullScreenRequested) {
-                console.log(`fullScreenRequested = $fullScreenRequested`)
-                if (fullScreenRequested) {
-                    if (elmContainer.requestFullscreen) {
-                        elmContainer.requestFullscreen();
-                    }
-                } else {
-                    if (document.exitFullscreen)
-                        document.exitFullscreen();
-                    else if (document.webkitExitFullscreen)
-                        document.webkitExitFullscreen();
-                    else if (document.mozCancelFullScreen)
-                        document.mozCancelFullScreen();
-                    else if (document.msExitFullscreen)
-                        document.msExitFullscreen();
-                }
-            });
+    function onFullScreenChange(event) {
+        const fullscreenElement = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
 
-            if (document.onfullscreenchange === null)
-                document.onfullscreenchange = onFullScreenChange;
-            else if (document.onmsfullscreenchange === null)
-                document.onmsfullscreenchange = onFullScreenChange;
-            else if (document.onmozfullscreenchange === null)
-                document.onmozfullscreenchange = onFullScreenChange;
-            else if (document.onwebkitfullscreenchange === null)
-                document.onwebkitfullscreenchange = onFullScreenChange;
-
-            function onFullScreenChange(event) {
-                var fullscreenElement = document.fullscreenElement ||
-                    document.webkitFullscreenElement ||
-                    document.mozFullScreenElement ||
-                    document.msFullscreenElement
-
-                app.ports.isFullscreen.send(fullscreenElement != null)
-            };
-        </script>
-    </div>
+        app.ports.isFullscreen.send(fullscreenElement != null)
+    }
+</script>
 </body>
