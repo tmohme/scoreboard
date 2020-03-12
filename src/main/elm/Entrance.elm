@@ -2,6 +2,8 @@ module Entrance exposing
     ( Model
     , Msg(..)
     , init
+    , session
+    , toConfig
     , update
     , view
     )
@@ -11,38 +13,54 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
+import Route exposing (Route)
+import Session exposing (Session)
 
 
 type alias Model =
-    { runTo : Int
+    { session : Session
+    , runTo : Int
     , runToBuffer : Maybe Int
     , runToModalVisible : Bool
+    , config : App.GameConfig
     }
+
+
+toConfig : Model -> App.GameConfig
+toConfig model =
+    model.config
+
+
+session : Model -> Session
+session model =
+    model.session
 
 
 type Msg
     = RunToInput String
     | SetRunTo
     | ToggleRunToModal
-    | Exit App.Event
 
 
 defaultTarget =
     80
 
 
-init : Model
-init =
-    { runTo = defaultTarget
-    , runToBuffer = Just defaultTarget
-    , runToModalVisible = False
-    }
+init : Session -> ( Model, Cmd Msg )
+init s =
+    ( { session = s
+      , runTo = defaultTarget
+      , runToBuffer = Just defaultTarget
+      , runToModalVisible = False
+      , config = App.init
+      }
+    , Cmd.none
+    )
 
 
-breakButton : Msg -> Html Msg
-breakButton msg =
-    button [ type_ "button", class "button", onClick msg ]
-        [ text "Break?" ]
+breakButton : App.GameConfig -> Html Msg
+breakButton config =
+    a [ class "button", Route.href (Route.Game config) ] [ text "Break?" ]
 
 
 runToButton : Model -> Html Msg
@@ -51,20 +69,17 @@ runToButton model =
         [ text <| "run to ... (" ++ String.fromInt model.runTo ++ ")" ]
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         RunToInput s ->
-            { model | runToBuffer = String.toInt s }
+            ( { model | runToBuffer = String.toInt s }, Cmd.none )
 
         SetRunTo ->
-            { model | runToModalVisible = False, runTo = Maybe.withDefault model.runTo model.runToBuffer }
+            ( { model | runToModalVisible = False, runTo = Maybe.withDefault model.runTo model.runToBuffer }, Cmd.none )
 
         ToggleRunToModal ->
-            { model | runToModalVisible = not model.runToModalVisible }
-
-        Exit _ ->
-            model
+            ( { model | runToModalVisible = not model.runToModalVisible }, Cmd.none )
 
 
 container : Html Msg -> Html Msg
@@ -80,9 +95,7 @@ view model =
                 -- TODO get text from players
                 -- TODO make it a button that enables name editing
                 [ container (text "left")
-
-                -- TODO questionable switch from Entrance to App
-                , container (breakButton (Exit (App.EntranceExit <| App.GameConfig App.Left model.runTo)))
+                , container (breakButton <| App.GameConfig App.Left model.runTo)
                 ]
             , div [ class "column has-text-centered" ]
                 [ container (text "14-1 Scoreboard")
@@ -92,9 +105,7 @@ view model =
                 -- TODO get text from players
                 -- TODO make it a button that enables name editing
                 [ container (text "right")
-
-                -- TODO questionable switch from Entrance to App
-                , container (breakButton (Exit (App.EntranceExit <| App.GameConfig App.Right model.runTo)))
+                , container (breakButton <| App.GameConfig App.Right model.runTo)
                 ]
             ]
         , viewRunToModal model

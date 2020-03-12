@@ -83,23 +83,21 @@ suite =
               <|
                 \leftPlayer rightPlayer ballsOnTable ->
                     let
-                        game =
-                            -- TODO replace constant
-                            Game.init { breakingPlayerId = App.Left, runTo = 150 }
+                        -- TODO replace constant
+                        runTo =
+                            150
 
-                        gameState =
-                            game.state
-
+                        configuredState : Game.State
                         configuredState =
-                            { gameState | left = leftPlayer, right = rightPlayer, switchReason = Player.Foul }
-
-                        configuredGame =
-                            { game | state = configuredState }
+                            { left = leftPlayer
+                            , right = rightPlayer
+                            , shooting = leftPlayer
+                            , ballsOnTable = ballsOnTable
+                            , switchReason = Player.Foul
+                            }
                     in
-                    configuredGame
-                        |> Game.update (Game.BallsLeftOnTable ballsOnTable)
-                        |> Tuple.first
-                        |> .state
+                    configuredState
+                        |> Game.handleBallsLeftOnTable ballsOnTable runTo
                         |> .shooting
                         |> .id
                         |> Expect.equal rightPlayer.id
@@ -113,26 +111,23 @@ suite =
               <|
                 \leftPlayer rightPlayer ballsOnTable ->
                     let
+                        -- TODO replace constant
+                        runTo =
+                            150
+
                         foulingPlayer =
                             { leftPlayer | previousFouls = 2 }
 
-                        game =
-                            -- TODO replace constant
-                            Game.init { breakingPlayerId = App.Left, runTo = 150 }
-
-                        gameState =
-                            game.state
-
                         configuredState =
-                            { gameState | left = foulingPlayer, right = rightPlayer, switchReason = Player.Foul }
-
-                        configuredGame =
-                            { game | state = configuredState }
+                            { left = foulingPlayer
+                            , right = rightPlayer
+                            , shooting = foulingPlayer
+                            , ballsOnTable = ballsOnTable
+                            , switchReason = Player.Foul
+                            }
                     in
-                    configuredGame
-                        |> Game.update (Game.BallsLeftOnTable ballsOnTable)
-                        |> Tuple.first
-                        |> .state
+                    configuredState
+                        |> Game.handleBallsLeftOnTable ballsOnTable runTo
                         |> .ballsOnTable
                         |> Expect.equal Game.fullRack
             ]

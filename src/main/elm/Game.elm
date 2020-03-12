@@ -1,21 +1,29 @@
 module Game exposing
     ( Model
     , Msg(..)
+    , State
     , determineShootingNext
     , determineWinner
     , fullRack
+    , handleBallsLeftOnTable
     , init
+    , session
+    , toConfig
     , update
     , view
     )
 
 import Application as App
+import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
 import Player exposing (Player, PlayerSwitch(..), SwitchReason(..))
 import Ports
+import Route
+import Session exposing (Session)
+import Url exposing (Url)
 
 
 type Msg
@@ -44,13 +52,25 @@ type alias State =
 
 
 type alias Model =
-    { state : State
+    { session : Session
+    , state : State
     , history : List State
     , runTo : Int
     , winner : Maybe Player
     , modal : Modal
     , isFullscreen : Bool
+    , config : App.GameConfig
     }
+
+
+toConfig : Model -> App.GameConfig
+toConfig model =
+    model.config
+
+
+session : Model -> Session
+session model =
+    model.session
 
 
 fullRack =
@@ -67,8 +87,8 @@ mapToPlayer playerId left right =
             right
 
 
-init : App.GameConfig -> Model
-init gameConfig =
+init : Session -> App.GameConfig -> ( Model, Cmd Msg )
+init s gameConfig =
     let
         left =
             Player.create App.Left
@@ -76,19 +96,23 @@ init gameConfig =
         right =
             Player.create App.Right
     in
-    { state =
-        { left = left
-        , right = right
-        , shooting = mapToPlayer gameConfig.breakingPlayerId left right
-        , ballsOnTable = fullRack
-        , switchReason = Miss
-        }
-    , history = []
-    , runTo = gameConfig.runTo
-    , winner = Nothing
-    , modal = None
-    , isFullscreen = False
-    }
+    ( { session = s
+      , state =
+            { left = left
+            , right = right
+            , shooting = mapToPlayer gameConfig.breakingPlayerId left right
+            , ballsOnTable = fullRack
+            , switchReason = Miss
+            }
+      , history = []
+      , runTo = gameConfig.runTo
+      , winner = Nothing
+      , modal = None
+      , isFullscreen = False
+      , config = gameConfig
+      }
+    , Cmd.none
+    )
 
 
 determineShootingNext : App.PlayerId -> PlayerSwitch -> Player -> Player -> Player
@@ -141,33 +165,33 @@ handleFoulToggle model =
     { model | state = newState }
 
 
-handleBallsLeftOnTable : Int -> Model -> Model
-handleBallsLeftOnTable remainingBalls model =
+handleBallsLeftOnTable : Int -> Int -> State -> State
+handleBallsLeftOnTable remainingBalls runTo state =
     let
         -- TODO special handling for break fouls
         shotBalls =
-            model.state.ballsOnTable - remainingBalls
+            state.ballsOnTable - remainingBalls
 
         -- TODO replace 'gameFinished' flag by an ADT properly modeling the Game state (Break, Running, Finished)
         gameFinished =
-            (model.state.shooting.points + shotBalls) >= model.runTo
+            (state.shooting.points + shotBalls) >= runTo
 
         playerSwitch =
-            if model.state.switchReason == Foul then
+            if state.switchReason == Foul then
                 Yes Foul
 
-            else if gameFinished || (remainingBalls > 1) || (model.state.ballsOnTable == remainingBalls) then
-                Yes model.state.switchReason
+            else if gameFinished || (remainingBalls > 1) || (state.ballsOnTable == remainingBalls) then
+                Yes state.switchReason
 
             else
                 No
 
         ( updatedLeft, leftTripleFoul ) =
             -- TODO can't we simply update just the shooting player? . . . Resetting his streak etc. after computing the other values?
-            Player.update model.state.left model.state.shooting shotBalls playerSwitch model.runTo
+            Player.update state.left state.shooting shotBalls playerSwitch runTo
 
         ( updatedRight, rightTripleFoul ) =
-            Player.update model.state.right model.state.shooting shotBalls playerSwitch model.runTo
+            Player.update state.right state.shooting shotBalls playerSwitch runTo
 
         ballsToContinueWith =
             if (remainingBalls == 1) || leftTripleFoul || rightTripleFoul then
@@ -178,36 +202,17 @@ handleBallsLeftOnTable remainingBalls model =
 
         shootingNext =
             determineShootingNext
-                model.state.shooting.id
+                state.shooting.id
                 playerSwitch
                 updatedLeft
                 updatedRight
-
-        winner =
-            determineWinner model.runTo updatedLeft updatedRight
-
-        modal =
-            case winner of
-                Nothing ->
-                    None
-
-                Just player ->
-                    WinnerModal player.id
-
-        newHistory =
-            model.state :: model.history
     in
-    { model
-        | state =
-            { left = updatedLeft
-            , right = updatedRight
-            , ballsOnTable = ballsToContinueWith
-            , shooting = shootingNext
-            , switchReason = Miss
-            }
-        , history = newHistory
-        , winner = winner
-        , modal = modal
+    { state
+        | left = updatedLeft
+        , right = updatedRight
+        , ballsOnTable = ballsToContinueWith
+        , shooting = shootingNext
+        , switchReason = Miss
     }
 
 
@@ -224,7 +229,32 @@ update msg model =
             ( handleFoulToggle model, Cmd.none )
 
         BallsLeftOnTable remainingBalls ->
-            ( handleBallsLeftOnTable remainingBalls model, Cmd.none )
+            let
+                newState =
+                    handleBallsLeftOnTable remainingBalls model.runTo model.state
+
+                winner =
+                    determineWinner model.runTo newState.left newState.right
+
+                modal =
+                    case winner of
+                        Nothing ->
+                            None
+
+                        Just player ->
+                            WinnerModal player.id
+
+                newHistory =
+                    model.state :: model.history
+            in
+            ( { model
+                | state = newState
+                , history = newHistory
+                , winner = winner
+                , modal = modal
+              }
+            , Cmd.none
+            )
 
         -- TODO implement me
         ShowLog ->
@@ -235,11 +265,20 @@ update msg model =
             ( { model | modal = None }, Cmd.none )
 
         ExitGame ->
-            ( model, Cmd.none )
+            let
+                baseUrl =
+                    model.session |> Session.baseUrl
+
+                entrance =
+                    baseUrl.path ++ Route.toString Route.Entrance
+            in
+            ( { model | modal = None }
+            , Nav.replaceUrl (model.session |> Session.navKey) entrance
+            )
 
 
-viewBall : Int -> Int -> Html Msg
-viewBall max n =
+viewBall : Int -> Int -> Url -> Html Msg
+viewBall max n baseUrl =
     let
         visibility =
             if n > max then
@@ -247,11 +286,14 @@ viewBall max n =
 
             else
                 ""
+
+        path =
+            baseUrl.path ++ "img/" ++ String.fromInt n ++ "B.svg"
     in
     button [ class <| "button tile" ++ visibility ]
         [ img
             [ alt (String.fromInt n)
-            , src <| "img/" ++ String.fromInt n ++ "B.svg"
+            , src path
             , onClick (BallsLeftOnTable n)
             ]
             []
@@ -417,7 +459,7 @@ view model =
             (List.range
                 1
                 fullRack
-                |> List.map (\n -> viewBall max n)
+                |> List.map (\n -> viewBall max n (model.session |> Session.baseUrl))
             )
         , viewModalDialog model.modal model.history
         ]
