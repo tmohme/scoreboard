@@ -1,4 +1,4 @@
-module Application exposing (Event(..), GameConfig, PlayerId(..), init, nameOf)
+module Application exposing (GameConfig, PlayerId(..), init, nameOf)
 
 
 type PlayerId
@@ -10,10 +10,6 @@ type alias GameConfig =
     { breakingPlayerId : PlayerId
     , runTo : Int
     }
-
-
-type Event
-    = EntranceExit GameConfig
 
 
 init : GameConfig

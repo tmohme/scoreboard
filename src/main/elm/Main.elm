@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Application
 import Browser
 import Browser.Navigation as Nav
 import Entrance
@@ -87,21 +86,6 @@ toSession model =
 
         Game game ->
             Game.session game
-
-
-navKey : Model -> Nav.Key
-navKey model =
-    toSession model |> Session.navKey
-
-
-toConfig : Model -> Application.GameConfig
-toConfig model =
-    case model of
-        Entrance entrance ->
-            Entrance.toConfig entrance
-
-        Game game ->
-            Game.toConfig game
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
