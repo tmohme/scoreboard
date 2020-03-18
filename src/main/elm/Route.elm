@@ -1,11 +1,11 @@
 module Route exposing (Route(..), fromUrl, href, toString)
 
-import Application as App exposing (nameOf)
+import Application as App
 import Dict
 import Html exposing (Attribute)
 import Html.Attributes as Attributes
 import Url exposing (Url)
-import Url.Builder exposing (string)
+import Url.Builder exposing (int, string)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, oneOf, s)
 import Url.Parser.Query as Query
 
@@ -16,54 +16,55 @@ type Route
 
 
 type alias QueryData =
-    { runTo : Maybe Int
-    , playerId : Maybe App.PlayerId
+    { playerId : Maybe App.PlayerId
+    , runTo : Maybe Int
     }
 
 
-playerIdQueryParser : Query.Parser (Maybe App.PlayerId)
-playerIdQueryParser =
-    Query.enum "playerId" (Dict.fromList [ ( "Left", App.Left ), ( "Right", App.Right ) ])
+breakingPlayerIdQueryParser : Query.Parser (Maybe App.PlayerId)
+breakingPlayerIdQueryParser =
+    Query.enum "break"
+        (Dict.fromList
+            [ ( App.nameOf App.Left, App.Left )
+            , ( App.nameOf App.Right, App.Right )
+            ]
+        )
 
 
-
-{-
-   configQuery : Query.Parser App.GameConfig
-   configQuery =
-       Query.map2 App.GameConfig (Query.int "runTo") playerIdQueryParser
-
-
-   f : Maybe Int -> Maybe App.PlayerId -> Maybe App.GameConfig
-   f runTo playerId =
-       Maybe.map2 App.GameConfig runTo playerId
--}
-
-
-playerIdParser : Parser (App.PlayerId -> a) a
-playerIdParser =
-    Parser.custom "PLAYER_ID" <|
-        \segment ->
-            case segment of
-                "Left" ->
-                    Just App.Left
-
-                "Right" ->
-                    Just App.Right
-
-                _ ->
-                    Nothing
-
-
-configParser =
-    Parser.map App.GameConfig (playerIdParser </> Parser.int)
+configQueryParser : Query.Parser QueryData
+configQueryParser =
+    Query.map2 QueryData breakingPlayerIdQueryParser (Query.int "runTo")
 
 
 parser : Parser (Route -> a) a
 parser =
     oneOf
         [ Parser.map Entrance (s "scoreboard")
-        , Parser.map Game (s "scoreboard" </> s "break" </> configParser)
+        , Parser.map queryDataToGame (s "scoreboard" </> s "game" <?> configQueryParser)
         ]
+
+
+queryDataToGame : QueryData -> Route
+queryDataToGame qd =
+    let
+        defaultConfig =
+            App.init
+
+        cfg =
+            case ( qd.playerId, qd.runTo ) of
+                ( Just playerId, Just runTo ) ->
+                    App.GameConfig playerId runTo
+
+                ( Just playerId, _ ) ->
+                    { defaultConfig | breakingPlayerId = playerId }
+
+                ( _, Just runTo ) ->
+                    { defaultConfig | runTo = runTo }
+
+                ( _, _ ) ->
+                    defaultConfig
+    in
+    Game cfg
 
 
 
@@ -88,5 +89,5 @@ toString route =
 
         Game config ->
             Url.Builder.relative
-                [ "break", nameOf config.breakingPlayerId, String.fromInt config.runTo ]
-                []
+                [ "game" ]
+                [ string "break" (App.nameOf config.breakingPlayerId), int "runTo" config.runTo ]
