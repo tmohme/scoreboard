@@ -9,6 +9,10 @@ import Url exposing (Url)
 import Url.Builder exposing (QueryParameter, int, string)
 
 
+basePath =
+    "something"
+
+
 fromUrl : Test
 fromUrl =
     let
@@ -22,14 +26,14 @@ fromUrl =
             App.nameOf App.Right
     in
     describe "Route.fromUrl"
-        [ testUrl "scoreboard" Nothing Entrance
-        , testUrl "scoreboard/game" (Just [ string "break" right, int "runTo" 81 ]) (Game (App.GameConfig App.Right 81))
-        , testUrl "scoreboard/game" (Just [ int "runTo" 82, string "break" right ]) (Game (App.GameConfig App.Right 82))
-        , testUrl "scoreboard/game" (Just [ string "break" left ]) (Game { defaultConfig | breakingPlayerId = App.Left })
-        , testUrl "scoreboard/game" (Just [ string "break" right ]) (Game { defaultConfig | breakingPlayerId = App.Right })
-        , testUrl "scoreboard/game" (Just [ int "runTo" 83 ]) (Game { defaultConfig | runTo = 83 })
-        , testUrl "scoreboard/game" (Just []) (Game defaultConfig)
-        , testUrl "scoreboard/game" Nothing (Game defaultConfig)
+        [ testUrl basePath Nothing Entrance
+        , testUrl (basePath ++ "/game") (Just [ string "break" right, int "runTo" 81 ]) (Game (App.GameConfig App.Right 81))
+        , testUrl (basePath ++ "/game") (Just [ int "runTo" 82, string "break" right ]) (Game (App.GameConfig App.Right 82))
+        , testUrl (basePath ++ "/game") (Just [ string "break" left ]) (Game { defaultConfig | breakingPlayerId = App.Left })
+        , testUrl (basePath ++ "/game") (Just [ string "break" right ]) (Game { defaultConfig | breakingPlayerId = App.Right })
+        , testUrl (basePath ++ "/game") (Just [ int "runTo" 83 ]) (Game { defaultConfig | runTo = 83 })
+        , testUrl (basePath ++ "/game") (Just []) (Game defaultConfig)
+        , testUrl (basePath ++ "/game") Nothing (Game defaultConfig)
         ]
 
 
@@ -50,12 +54,21 @@ testUrl path query route =
 
                 Just params ->
                     Url.Builder.toQuery params
+
+        baseUrl =
+            { protocol = Url.Http
+            , host = "anywhere"
+            , port_ = Nothing
+            , path = basePath
+            , query = Nothing
+            , fragment = Nothing
+            }
     in
     test ("Parsing path: '" ++ path ++ queryString ++ "'") <|
         \() ->
             ( path, query )
                 |> toUrl
-                |> Route.fromUrl
+                |> Route.fromUrl baseUrl
                 |> Expect.equal (Just route)
 
 

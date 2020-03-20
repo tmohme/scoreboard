@@ -37,17 +37,21 @@ init _ url key =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        session =
+            toSession model
+    in
     case ( msg, model ) of
         ( ClickedLink urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.replaceUrl (Session.navKey (toSession model)) (Url.toString url) )
+                    ( model, Nav.replaceUrl (Session.navKey session) (Url.toString url) )
 
                 Browser.External href ->
                     ( model, Nav.load href )
 
         ( ChangedUrl url, _ ) ->
-            changeRouteTo (Route.fromUrl url) model
+            changeRouteTo (Route.fromUrl (Session.baseUrl session) url) model
 
         ( GotEntranceMsg subMsg, Entrance entrance ) ->
             Entrance.update subMsg entrance

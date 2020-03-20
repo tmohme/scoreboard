@@ -39,8 +39,8 @@ configQueryParser =
 parser : Parser (Route -> a) a
 parser =
     oneOf
-        [ Parser.map Entrance (s "scoreboard")
-        , Parser.map queryDataToGame (s "scoreboard" </> s "game" <?> configQueryParser)
+        [ Parser.map Entrance Parser.top
+        , Parser.map queryDataToGame (s "game" <?> configQueryParser)
         ]
 
 
@@ -76,9 +76,32 @@ href targetRoute =
     Attributes.href (toString targetRoute)
 
 
-fromUrl : Url -> Maybe Route
-fromUrl url =
-    Parser.parse parser url
+fromUrl : Url -> Url -> Maybe Route
+fromUrl baseUrl url =
+    Debug.log "Route.fromUrl" <|
+        Parser.parse parser (dropBasePath baseUrl url)
+
+
+dropBasePath : Url -> Url -> Url
+dropBasePath baseUrl url =
+    let
+        baseSegments =
+            String.split "/" baseUrl.path
+
+        segments =
+            String.split "/" url.path
+
+        numberOfCommonParents =
+            List.map2 (\member1 member2 -> member1 == member2) segments baseSegments
+                |> List.filter identity
+                |> List.length
+
+        effectiveSegments =
+            List.drop numberOfCommonParents segments
+    in
+    { url
+        | path = String.join "/" effectiveSegments
+    }
 
 
 toString : Route -> String

@@ -8,7 +8,6 @@ module Game exposing
     , handleBallsLeftOnTable
     , init
     , session
-    , toConfig
     , update
     , view
     )
@@ -61,11 +60,6 @@ type alias Model =
     , isFullscreen : Bool
     , config : App.GameConfig
     }
-
-
-toConfig : Model -> App.GameConfig
-toConfig model =
-    model.config
 
 
 session : Model -> Session
@@ -277,8 +271,8 @@ update msg model =
             )
 
 
-viewBall : Int -> Int -> Url -> Html Msg
-viewBall max n baseUrl =
+viewBall : (String -> String) -> Int -> Int -> Html Msg
+viewBall adaptPath max n =
     let
         visibility =
             if n > max then
@@ -288,7 +282,7 @@ viewBall max n baseUrl =
                 ""
 
         path =
-            baseUrl.path ++ "img/" ++ String.fromInt n ++ "B.svg"
+            adaptPath "img/" ++ String.fromInt n ++ "B.svg"
     in
     button [ class <| "button tile" ++ visibility ]
         [ img
@@ -427,6 +421,9 @@ view model =
 
         fullscreenMsg =
             RequestFullscreen (not model.isFullscreen)
+
+        baseUrl =
+            model.session |> Session.baseUrl
     in
     div []
         [ div [ class "columns" ]
@@ -456,10 +453,13 @@ view model =
             ]
         , div
             [ class "tile is-ancestor" ]
-            (List.range
-                1
-                fullRack
-                |> List.map (\n -> viewBall max n (model.session |> Session.baseUrl))
+            (List.range 1 fullRack
+                |> List.map (viewBall (resourceBasedPath baseUrl) max)
             )
         , viewModalDialog model.modal model.history
         ]
+
+
+resourceBasedPath : Url -> String -> String
+resourceBasedPath baseUrl path =
+    baseUrl.path ++ "/../" ++ path
